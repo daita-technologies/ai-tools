@@ -8,10 +8,10 @@ import traceback
 from functools import partial
 from typing import Callable, List, Optional
 
-import AI.preprocessing.preprocessing_list  # Import to register all preprocessing
-from AI.preprocessing.registry import PREPROCESSING, CodeToPreprocess
-from AI.utils import read_image, resize_image, save_image
-from AI.preprocessing.utils import calculate_signal_to_noise
+import preprocessing.preprocessing_list  # Import to register all preprocessing
+from preprocessing.registry import PREPROCESSING, CodeToPreprocess
+from utils import read_image, resize_image, save_image
+from preprocessing.utils import calculate_signal_to_noise
 
 
 class Preprocessor:

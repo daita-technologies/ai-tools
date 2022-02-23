@@ -1,4 +1,4 @@
-# Backend System for the DAITA Platform
+# AI Tools for the DAITA Platform
 
 ## A Note on Releases
 

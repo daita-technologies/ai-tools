@@ -4,7 +4,7 @@ import kornia as K
 import random
 from typing import Dict, Tuple
 
-from AI.augmentation.registry import register_augmentation
+from augmentation.registry import register_augmentation
 
 
 @register_augmentation(name="random_rotate")

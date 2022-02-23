@@ -10,8 +10,8 @@ import traceback
 import multiprocessing as mp
 from typing import List, Dict
 
-from AI.augmentation.augmentor import Augmentor
-from AI.utils import get_current_time
+from augmentation.augmentor import Augmentor
+from utils import get_current_time
 
 
 CURRENT_TIME: str = get_current_time()

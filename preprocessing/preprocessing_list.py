@@ -1,10 +1,10 @@
 import numpy as np
 from typing import Dict, Any, Tuple
 
-from AI.utils import resize_image
-from AI.preprocessing.base import BasePreprocessing
-from AI.preprocessing.registry import register_preprocessing
-from AI.preprocessing.utils import (
+from utils import resize_image
+from preprocessing.base import BasePreprocessing
+from preprocessing.registry import register_preprocessing
+from preprocessing.utils import (
     calculate_contrast_score,
     calculate_sharpness_score,
 )

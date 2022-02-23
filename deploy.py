@@ -8,9 +8,9 @@ import random
 import multiprocessing as mp
 from typing import List, Dict
 
-from AI.augmentations.augmentor import Augmentor
-from AI.preprocessing.preprocessor import Preprocessor
-from AI.preprocessing.registry import CodeToPreprocess
+from augmentation.augmentor import Augmentor
+from preprocessing.preprocessor import Preprocessor
+from preprocessing.registry import CodeToPreprocess
 
 
 class Deployment:

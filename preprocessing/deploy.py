@@ -9,8 +9,8 @@ import traceback
 import multiprocessing as mp
 from typing import List, Dict
 
-from AI.preprocessing.preprocessor import Preprocessor
-from AI.utils import get_current_time
+from preprocessing.preprocessor import Preprocessor
+from utils import get_current_time
 
 
 CURRENT_TIME: str = get_current_time()

@@ -11,9 +11,9 @@ import random
 import os
 from typing import List, Optional, Tuple
 
-import AI.augmentation.augmentations_list  # Import to register all augmentations
-from AI.augmentation.registry import AUGMENTATIONS, CodeToAugment
-from AI.utils import image_to_tensor, read_image, save_image, tensor_to_image
+import augmentation.augmentations_list  # Import to register all augmentations
+from augmentation.registry import AUGMENTATIONS, CodeToAugment
+from utils import image_to_tensor, read_image, save_image, tensor_to_image
 
 
 class Augmentor:
