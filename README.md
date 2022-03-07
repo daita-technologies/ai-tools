@@ -6,7 +6,7 @@
 
 List of preprocessing methods:
 
-- `DiscardExif`: Rotate image according to Exif information.
+- `RotateExif`: Rotate image according to Exif information.
 - `Grayscale`: Grayscale an image.
 - `NormalizeBrightness`: Adjust brightness of image to match with a reference image if the difference `> 75%`.
 - `NormalizeHue`: Adjust hue of image to match with a reference image if the difference `> 75%`.

@@ -11,7 +11,7 @@ from preprocessing.utils import (
 
 
 @register_preprocessing(name="auto_orientation")
-class DiscardExif(BasePreprocessing):
+class RotateExif(BasePreprocessing):
     def __init__(self):
         pass
 
