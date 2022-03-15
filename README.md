@@ -6,7 +6,7 @@ List of augmentation methods:
 - `random_scale`: Zoom a random region in an image. Scaling factor range: 0.5 to 2.
 - `random_translate`: Shift image randomly in vertical direction or horizontal direction. Shifting percentage: `-img_width * a < dx < img_width * a` or `-img_height * b < dx < img_width * b`, a = 0.2 and b = 0.2.
 - `random_horizontal_flip`: Flip image horizontally.
-- `random_vertical_flip`: FLip image vertically.
+- `random_vertical_flip`: Flip image vertically.
 - `random_crop`: Crop a random region in an image. Crop size: 512 x 512.
 - `random_tile`: Tile an image and extract a random patch. Patch size: 512 x 512
 - `random_erase`: Choose a random region in image and fill it with black. Region's scale range: 0.02 to 0.3. Region's ratio range: 0.3 to 3.3.
