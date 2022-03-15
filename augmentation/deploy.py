@@ -3,7 +3,6 @@ from ray import serve
 from starlette.requests import Request
 from starlette.responses import Response
 
-import os
 import logging
 import sys
 import traceback
@@ -22,7 +21,7 @@ logging.basicConfig(
     handlers=[
         logging.StreamHandler(sys.stdout),
         logging.FileHandler(
-            f"AI/logs/augmentaions_{CURRENT_TIME}.txt", mode="w", encoding="utf-8"
+            f"logs/augmentaions_{CURRENT_TIME}.txt", mode="w", encoding="utf-8"
         ),
     ],
 )
