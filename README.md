@@ -57,7 +57,6 @@ pip install -r AI/requirements.txt --find-links=https://download.pytorch.org/whl
 ```
 
 #### Deployment via Rest API on Endpoint `0.0.0.0:8000/ai`
-
 ```bash
 OMP_NUM_THREADS=12 ray start --head; python AI/deploy.py
 ```
@@ -114,7 +113,6 @@ print(response.json())
 ```
 
 ## Libraries
-
 - Preprocessing on CPU: [Scikit-image](https://github.com/scikit-image/scikit-image)
 - Augmentation on GPU and CPU: [Kornia](https://github.com/kornia/kornia)
 - Deploy on REST API: [Ray](https://github.com/ray-project/ray)

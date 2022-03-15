@@ -196,7 +196,7 @@ class NormalizeSaturation(BasePreprocessing):
 
     def process(self, image: np.ndarray, reference_image: np.ndarray, **kwargs) -> Tuple[np.ndarray, bool]:
         """
-        Normalize hue of a tensor image given a reference image.
+        Normalize saturation of a tensor image given a reference image.
 
         Parameters:
         -----------
