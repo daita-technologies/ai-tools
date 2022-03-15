@@ -1,7 +1,6 @@
 import torch
 import numpy as np
 from skimage.color import rgb2ycbcr
-from skimage.color import rgb2lab
 import kornia as K
 import cv2
 
@@ -22,7 +21,7 @@ def calculate_contrast_score(image: np.ndarray) -> float:
 
 
 def calculate_sharpness_score(image: np.ndarray) -> float:
-    sharpness: float = cv2.Laplacian(image, cv2.CV_16S).std()
+    sharpness: float = cv2.Laplacian(image, cv2.CV_16S).var()
     return sharpness
 
 
@@ -55,12 +54,6 @@ def calculate_signal_to_noise(image: np.ndarray, axis=None, ddof=0) -> float:
     std = image.std(axis=axis, ddof=ddof)
     signal_to_noise: np.ndarray = np.where(std == 0, 0, mean / std)
     return float(signal_to_noise)
-
-
-def calculate_luminance(image: np.ndarray) -> float:
-    lab: float = rgb2lab(image)
-    luminance: int = cv2.Laplacian(lab, cv2.CV_16S).std()
-    return luminance
 
 
 class AdaptiveGammaCorrection:
