@@ -170,7 +170,6 @@ def random_tile(images: torch.Tensor,
 def random_erase(images: torch.Tensor,
                  scale: Tuple[float, float] = (0.02, 0.33),
                  ratio: Tuple[float, float] = (0.3, 3.3),
-                 size: Tuple[int, int] = (512, 512),
                  same_on_batch: bool = False
                  ) -> torch.Tensor:
     """
