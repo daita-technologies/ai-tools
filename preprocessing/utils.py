@@ -131,3 +131,4 @@ class AdaptiveGammaCorrection:
         for i in unique_intensity:
             image_new[image == i] = torch.round(255 * (i / 255)**inverse_cdf[i])
         return image_new
+        
