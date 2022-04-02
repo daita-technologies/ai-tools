@@ -59,7 +59,7 @@ def calculate_signal_to_noise(image: np.ndarray, axis=None, ddof=0) -> float:
 
 def calculate_luminance(image: np.ndarray) -> float:
     lab: float = rgb2lab(image)
-    luminance: int = cv2.Laplacian(lab, cv2.CV_16S).std()
+    luminance: int = cv2.Laplacian(lab, cv2.CV_64F).std()
     return luminance
 
 
