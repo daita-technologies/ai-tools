@@ -1,15 +1,17 @@
 import numpy as np
 import cv2
+import boto3
 
 import os
 from typing import Tuple
 
 from healthcheck.registry import register_healthcheck
+from healthcheck.utils import S3
 from preprocessing.utils import (
     calculate_contrast_score,
     calculate_signal_to_noise,
     calculate_sharpness_score,
-    calculate_luminance
+    calculate_luminance,
 )
 
 
@@ -43,7 +45,13 @@ def check_luminance(image: np.ndarray, **kwargs) -> int:
 @register_healthcheck(name="file_size")
 def check_file_size(image: np.ndarray, **kwargs) -> int:
     image_path: str = kwargs["image_path"]
-    file_size_in_mb: int = os.path.getsize(image_path) / 1024 / 1024
+    if "s3://" in image_path:  # path is an S3 URI
+        bucket, key_name = S3.split_s3_path(image_path)
+        file_size_in_bytes: int = boto3.resource('s3').Bucket(bucket).Object(key_name).content_length
+    else:  # local path
+        file_size_in_bytes = os.path.getsize(image_path)
+
+    file_size_in_mb: int = file_size_in_bytes / 1024 / 1024
     return file_size_in_mb
 
 
