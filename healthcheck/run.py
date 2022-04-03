@@ -130,7 +130,7 @@ def main(image_paths: List[str], output_dir: str) -> Union[str, bool]:
 
         # Convert data to csv and save to disk
         csv_name: str = (
-            datetime.datetime.utcnow().strftime('%Y-%m-%d_%H-%M:-%S') + "_" + uuid.uuid4().hex + ".csv"
+            "healthcheck_" + datetime.datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S') + "_" + uuid.uuid4().hex + ".csv"
         )
         csv_path: str = os.path.join(output_dir, csv_name)
         pd.DataFrame(output).to_csv(csv_path, index=None)
