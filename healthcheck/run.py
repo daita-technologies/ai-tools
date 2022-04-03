@@ -14,12 +14,11 @@ from healthcheck.registry import HEALTHCHECK
 from healthcheck.utils import read_image
 
 
-S3_IMAGES_BUCKET: str = os.getenv("S3_IMAGES_BUCKET", "")
 ray.init()
 
 
 @ray.remote
-def healthcheck(image_name: str, s3_images_bucket: str) -> Dict[str, Union[int, float, str, None]]:
+def healthcheck(image_path: str) -> Dict[str, Union[int, float, str, None]]:
     result: Dict[str, Union[int, float, str, None]] = {
         "file_name": None,
         "signal_to_noise_red_channel": None,
@@ -38,14 +37,13 @@ def healthcheck(image_name: str, s3_images_bucket: str) -> Dict[str, Union[int, 
         "extension": None,
     }
 
-    print(f"Processing {image_name}")
+    print(f"Processing {image_path}")
     try:
         start = time.time()
-        image_path: str = os.path.join(s3_images_bucket, image_name)
         image = read_image(image_path)
 
         # Check file name
-        result["file_name"] = image_name
+        result["file_name"] = os.path.basename(image_path)
 
         # Check signal to noise of each channel
         snr_R, snr_G, snr_B = HEALTHCHECK["signal_to_noise"](image, image_path=image_path)
@@ -89,16 +87,16 @@ def healthcheck(image_name: str, s3_images_bucket: str) -> Dict[str, Union[int, 
 
         end = time.time()
         print(result)
-        print(f"Done processing {image_name}: {round(end - start, 4)} seconds")
+        print(f"Done processing {image_path}: {round(end - start, 4)} seconds")
         return result
 
     except Exception:
         print(result)
-        print(f"Error processing {image_name}: {traceback.format_exc()} !!!")
+        print(f"Error processing {image_path}: {traceback.format_exc()} !!!")
         return result
 
 
-def main(image_names: List[str], s3_images_bucket: str, output_dir: str) -> Union[str, bool]:
+def main(image_paths: List[str], output_dir: str) -> Union[str, bool]:
     output: Dict[str, List[Union[int, float, str, None]]] = {
         "file_name": [],
         "signal_to_noise_red_channel": [],
@@ -120,8 +118,8 @@ def main(image_names: List[str], s3_images_bucket: str, output_dir: str) -> Unio
     try:
         # Multiprocessing heathccheck
         results: List[Dict[str, List[Union[int, float, str, None]]]] = [
-            healthcheck.remote(image_name, s3_images_bucket)
-            for image_name in image_names
+            healthcheck.remote(image_path)
+            for image_path in image_paths
         ]
         results = ray.get(results)
 
@@ -145,11 +143,11 @@ def main(image_names: List[str], s3_images_bucket: str, output_dir: str) -> Unio
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Check health of dataset")
-    parser.add_argument("--images", type=str, nargs="*", default=[], help="List of image names on S3 bucket")
+    parser.add_argument("--images", type=str, nargs="*", default=[], help="List of image path (can be S3 URI or local path)")
     parser.add_argument("--output_dir", type=str, required=True, help="Directory to save csv output")
     args = vars(parser.parse_args())
 
-    image_names: List[str] = args["images"]
+    image_paths: List[str] = args["images"]
     output_dir: str = args["output_dir"]
 
-    main(image_names, S3_IMAGES_BUCKET, output_dir)
+    main(image_paths, output_dir)
