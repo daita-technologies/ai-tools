@@ -1,7 +1,8 @@
 import ray
 from ray import serve
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import JSONResponse
+from fastapi import FastAPI
 
 import traceback
 import multiprocessing as mp
@@ -11,6 +12,19 @@ from augmentation.augmentor import Augmentor
 from preprocessing.preprocessor import Preprocessor
 
 
+app = FastAPI()
+
+
+@serve.deployment(
+    route_prefix="/ai",
+    num_replicas=1,
+    max_concurrent_queries=32,
+    ray_actor_options={
+        "num_cpus": mp.cpu_count(),
+        "num_gpus": 0
+    },
+)
+@serve.ingress(app)
 class Deployment:
     def __init__(self, use_gpu: bool = False):
         """
@@ -25,9 +39,10 @@ class Deployment:
         self.augmentor = Augmentor(use_gpu)
         self.preprocessor = Preprocessor(use_gpu)
 
-    async def __call__(self, request: Request) -> List[Dict[str, object]]:
+    @app.post("/")
+    async def process(self, request: Request) -> List[Dict[str, object]]:
         """
-        Wrapper of `Augmentor.process` when called with HTTP request.
+        Wrapper of `Augmentor.process` and `Preprocessor.process` when called with HTTP request.
 
         Parameters:
         ----------
@@ -103,8 +118,8 @@ class Deployment:
             codes: List[str] = data["codes"]
             type_: str = data["type"]
             if type_ not in ("augmentation", "preprocessing"):
-                return Response(
-                    status_code=500,
+                return JSONResponse(
+                    status_code=404,
                     content=f"Field 'type' must be 'preprocessing' or 'augmentation'. Got type={type_}"
                 )
 
@@ -133,6 +148,7 @@ class Deployment:
 
             # Handle preprocessing
             elif type_ == "preprocessing":
+                reference_path_dict: Dict[str, str] = data["reference_images"]
                 preprocess_codes: List[str] = list(filter(
                     lambda code: "PRE" in code,
                     codes
@@ -140,13 +156,30 @@ class Deployment:
                 output_image_paths = self.preprocessor.process(
                     input_image_paths,
                     output_dir,
-                    preprocess_codes
+                    preprocess_codes,
+                    reference_path_dict
                 )
                 return {
                     "images_paths": output_image_paths,
                 }
         except Exception:
-            return Response(status_code=500, content=traceback.format_exc())
+            return JSONResponse(status_code=500, content=traceback.format_exc())
+
+    @app.get("/preprocessing/reference_image")
+    async def get_reference_image_path(self, request: Request) -> Dict[str, str]:
+        data: Dict[str, object] = await request.json()
+
+        try:
+            input_image_paths: str = data["images_paths"]
+            preprocess_codes: List[str] = data["codes"]
+            # Mapping from a preprocess_code to its corresponding reference image path
+            reference_path_dict: Dict[str, str] = self.preprocessor.get_reference_image_path(
+                input_image_paths,
+                preprocess_codes
+            )
+            return reference_path_dict
+        except Exception:
+            return JSONResponse(status_code=500, content=traceback.format_exc())
 
 
 if __name__ == "__main__":
@@ -158,13 +191,4 @@ if __name__ == "__main__":
     )
 
     # Deploy
-    num_cpus: int = mp.cpu_count()
-    serve.deployment(Deployment).options(
-        route_prefix="/ai",
-        num_replicas=1,
-        max_concurrent_queries=32,
-        ray_actor_options={
-            "num_cpus": num_cpus,
-            "num_gpus": 0
-        },
-    ).deploy(use_gpu=False)
+    Deployment.deploy(use_gpu=False)
