@@ -2,15 +2,15 @@ import torch
 import kornia as K
 
 import random
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any, Union
 
 from augmentation.registry import register_augmentation
 
 
 @register_augmentation(name="random_rotate")
 def random_rotate(images: torch.Tensor,
-                  degrees: Tuple[float, float] = (-20., 20.),
-                  same_on_batch: bool = False
+                  same_on_batch: bool = False,
+                  **kwargs
                   ) -> torch.Tensor:
     """
     Random rotate a batch of tensor images.
@@ -24,15 +24,24 @@ def random_rotate(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
-    transform = K.augmentation.RandomRotation(degrees, same_on_batch=same_on_batch, p=1.0)
+    degree: Union[Tuple[float, float], float, int] = kwargs.get("parameters", {}).get("degree")
+    # If degrees are given, ensure the same output over the whole batch
+    if degree is not None:
+        if isinstance(degree, (float, int)):
+            degree = (degree, degree)
+        same_on_batch = True
+    else:
+        degree = (-20., 20.)
+
+    transform = K.augmentation.RandomRotation(degree, same_on_batch=same_on_batch, p=1.0)
     images_out: torch.Tensor = transform(images)
     return images_out
 
 
 @register_augmentation(name="random_scale")
 def random_scale(images: torch.Tensor,
-                 scale: Tuple[float, float] = (0.5, 2),
-                 same_on_batch: bool = False
+                 same_on_batch: bool = False,
+                 **kwargs
                  ) -> torch.Tensor:
     """
     Random scale a batch of tensor images.
@@ -46,6 +55,15 @@ def random_scale(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
+    scale: Union[Tuple[float, float], float, int] = kwargs.get("parameters", {}).get("scale")
+    # If scale is given, ensure the same output over the whole batch
+    if scale is not None:
+        if isinstance(scale, (float, int)):
+            scale = (scale, scale)
+        same_on_batch = True
+    else:
+        scale: Tuple[float, float] = (0.5, 2)
+
     transform = K.augmentation.RandomAffine(degrees=0., scale=scale, same_on_batch=same_on_batch, p=1.0)
     images_out: torch.Tensor = transform(images)
     return images_out
@@ -53,8 +71,8 @@ def random_scale(images: torch.Tensor,
 
 @register_augmentation(name="random_translate")
 def random_translate(images: torch.Tensor,
-                     translate: Tuple[float, float] = (0.2, 0.2),
-                     same_on_batch: bool = False
+                     same_on_batch: bool = False,
+                     **kwargs,
                      ) -> torch.Tensor:
     """
     Randomly translate a batch of tensor images.
@@ -68,6 +86,14 @@ def random_translate(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
+    translate_horizontal: float = kwargs.get("parameters", {}).get("translate_horizontal", 0.)
+    translate_vertical: float = kwargs.get("parameters", {}).get("translate_vertical", 0.)
+    # If translate is given, ensure the same output over the whole batch
+    if translate_horizontal is not None and translate_vertical is not None:
+        translate: Tuple[float, float] = (translate_horizontal, translate_vertical)
+        same_on_batch = True
+    else:
+        translate = (0.2, 0.2)
     transform = K.augmentation.RandomAffine(degrees=0., translate=translate, same_on_batch=same_on_batch, p=1.0)
     images_out: torch.Tensor = transform(images)
     return images_out
@@ -75,7 +101,8 @@ def random_translate(images: torch.Tensor,
 
 @register_augmentation(name="random_horizontal_flip")
 def random_horizontal_flip(images: torch.Tensor,
-                           same_on_batch: bool = False
+                           same_on_batch: bool = False,
+                           **kwargs
                            ) -> torch.Tensor:
     """
     Randomly horizontal flip a batch of tensor images.
@@ -89,14 +116,26 @@ def random_horizontal_flip(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
-    transform = K.augmentation.RandomHorizontalFlip(same_on_batch=same_on_batch, p=1.0)
-    images_out: torch.Tensor = transform(images)
-    return images_out
+    flip: bool = kwargs.get("parameters", {}).get("flip")
+    if flip is None:
+        # If flip is not given, perform random flip
+        transform = K.augmentation.RandomHorizontalFlip(same_on_batch=same_on_batch, p=1.0)
+        images_out: torch.Tensor = transform(images)
+        return images_out
+    elif flip is True:
+        # If flip is True, ensure the same output over the whole batch
+        images_out: torch.Tensor = K.geometry.flips.hflip(images)
+        same_on_batch = True
+        return images_out
+    else:
+        # If flip is False, do nothing
+        return images
 
 
 @register_augmentation(name="random_vertical_flip")
 def random_vertical_flip(images: torch.Tensor,
-                         same_on_batch: bool = False
+                         same_on_batch: bool = False,
+                         **kwargs
                          ) -> torch.Tensor:
     """
     Randomly vertical flip a batch of tensor images.
@@ -110,15 +149,26 @@ def random_vertical_flip(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
-    transform = K.augmentation.RandomVerticalFlip(same_on_batch=same_on_batch, p=1.0)
-    images_out: torch.Tensor = transform(images)
-    return images_out
+    flip: bool = kwargs.get("parameters", {}).get("flip")
+    if flip is None:
+        # If flip is not given, perform random flip
+        transform = K.augmentation.RandomVerticalFlip(same_on_batch=same_on_batch, p=1.0)
+        images_out: torch.Tensor = transform(images)
+        return images_out
+    elif flip is True:
+        # If flip is True, ensure the same output over the whole batch
+        images_out: torch.Tensor = K.geometry.flips.vflip(images)
+        same_on_batch = True
+        return images_out
+    else:
+        # If flip is False, do nothing
+        return images
 
 
 @register_augmentation(name="random_crop")
 def random_crop(images: torch.Tensor,
-                size: Tuple[int, int] = (512, 512),
-                same_on_batch: bool = False
+                same_on_batch: bool = False,
+                **kwargs
                 ) -> torch.Tensor:
     """
     Randomly crop a batch of tensor images.
@@ -132,6 +182,13 @@ def random_crop(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
+    size: Union[Tuple[int, int], int] = kwargs.get("parameters", {}).get("size")
+    if size is not None:
+        if isinstance(size, int):
+            size: Tuple[int, int] = (size, size)
+        same_on_batch = True
+    else:
+        size: Tuple[int, int] = (512, 512)
 
     transform = K.augmentation.RandomCrop(size=size, same_on_batch=same_on_batch, p=1.0)
     images_out: torch.Tensor = transform(images)
@@ -140,13 +197,13 @@ def random_crop(images: torch.Tensor,
 
 @register_augmentation(name="random_tile")
 def random_tile(images: torch.Tensor,
-                window_size: int = 512,
-                same_on_batch: bool = False
+                same_on_batch: bool = False,
+                **kwargs
                 ) -> Dict[str, object]:
     """
     Apply tiling to batch of tensor images and extract a random patch .
 
-    Warning: unfolding image into patches consumes A LOT OF memory.
+    Warning: unfolding image into patches consumes A LOT of memory.
             https://scikit-image.org/docs/dev/api/skimage.util.html#skimage.util.view_as_windows
 
     Parameters:
@@ -158,6 +215,10 @@ def random_tile(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
+    window_size: int = kwargs.get("parameters", {}).get("window_size")
+    if window_size is None:
+        window_size = 512
+
     patches: torch.Tensor = K.contrib.extract_tensor_patches(images, window_size, stride=window_size)
     B, num_patches, C, H, W = patches.shape
     # Randomly choose a patch
@@ -168,9 +229,8 @@ def random_tile(images: torch.Tensor,
 
 @register_augmentation(name="random_erase")
 def random_erase(images: torch.Tensor,
-                 scale: Tuple[float, float] = (0.02, 0.33),
-                 ratio: Tuple[float, float] = (0.3, 3.3),
-                 same_on_batch: bool = False
+                 same_on_batch: bool = False,
+                 **kwargs
                  ) -> torch.Tensor:
     """
     Randomly erase a batch of tensor images.
@@ -184,6 +244,18 @@ def random_erase(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
+    scale: Union[Tuple[float, float], float, int] = kwargs.get("parameters", {}).get("scale")
+    ratio: Union[Tuple[float, float], float, int] = kwargs.get("parameters", {}).get("ratio")
+    if scale is not None and ratio is not None:
+        if isinstance(scale, (float, int)):
+            scale = (scale, scale)
+        if isinstance(ratio, (float, int)):
+            ratio = (ratio, ratio)
+        same_on_batch = True
+    else:
+        scale = (0.02, 0.33)
+        ratio = (0.3, 3.3)
+
     transform = K.augmentation.RandomErasing(scale, ratio, value=0., same_on_batch=same_on_batch, p=1.0)
     images_out: torch.Tensor = transform(images)
     return images_out
@@ -191,9 +263,8 @@ def random_erase(images: torch.Tensor,
 
 @register_augmentation(name="random_gaussian_noise")
 def random_gaussian_noise(images: torch.Tensor,
-                          mean: float = 0.,
-                          std: float = 0.1,
-                          same_on_batch: bool = False
+                          same_on_batch: bool = False,
+                          **kwargs,
                           ) -> torch.Tensor:
     """
     Randomly erase a batch of tensor images.
@@ -207,6 +278,14 @@ def random_gaussian_noise(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
+    mean: float = kwargs.get("parameters", {}).get("mean")
+    std: float = kwargs.get("parameters", {}).get("std")
+    if mean is not None and std is not None:
+        same_on_batch = True
+    else:
+        mean = 0.
+        std = 0.1
+
     transform = K.augmentation.RandomGaussianNoise(mean, std, same_on_batch=same_on_batch, p=1.0)
     images_out: torch.Tensor = transform(images)
     return images_out
@@ -216,7 +295,8 @@ def random_gaussian_noise(images: torch.Tensor,
 def random_gaussian_blur(images: torch.Tensor,
                          kernel_sizes: Tuple[int, int] = (3, 27),
                          sigmas: Tuple[float, float] = (1., 10.),
-                         same_on_batch: bool = False
+                         same_on_batch: bool = False,
+                         **kwargs
                          ) -> torch.Tensor:
     """
     Randomly blur a batch of tensor images.
@@ -238,7 +318,15 @@ def random_gaussian_blur(images: torch.Tensor,
         sigma: float = random.uniform(sigmas[0], sigmas[1])
         return kernel_size, sigma
 
-    kernel_size, sigma = get_random_kernel_size_and_sigma()
+    kernel_size: int = kwargs.get("parameters", {}).get("kernel_size")
+    sigma: float = kwargs.get("parameters", {}).get("sigma")
+    if kernel_size is not None and sigma is not None:
+        if kernel_size % 2 == 0:
+            raise ValueError(f"kernel_size must be an odd number. Got {kernel_size=}")
+        same_on_batch = True
+    else:
+        kernel_size, sigma = get_random_kernel_size_and_sigma()
+
     transform = K.augmentation.RandomGaussianBlur(
         (kernel_size, kernel_size),
         (sigma, sigma),
@@ -251,8 +339,8 @@ def random_gaussian_blur(images: torch.Tensor,
 
 @register_augmentation(name="random_sharpness")
 def random_sharpness(images: torch.Tensor,
-                     sharpness: float = 0.5,
-                     same_on_batch: bool = False
+                     same_on_batch: bool = False,
+                     **kwargs
                      ) -> torch.Tensor:
     """
     Randomly enhance sharpness a batch of tensor images.
@@ -266,6 +354,14 @@ def random_sharpness(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
+    sharpness: Union[Tuple[float, float], float, int] = kwargs.get("parameters", {}).get("sharpness")
+    if sharpness is not None:
+        if isinstance(sharpness, (float, int)):
+            sharpness = (sharpness, sharpness)
+        same_on_batch = True
+    else:
+        sharpness = (0.3, 0.7)
+
     transform = K.augmentation.RandomSharpness(sharpness, same_on_batch=same_on_batch, p=1.0)
     images_out: torch.Tensor = transform(images)
     return images_out
@@ -273,8 +369,8 @@ def random_sharpness(images: torch.Tensor,
 
 @register_augmentation(name="random_brightness")
 def random_brightness(images: torch.Tensor,
-                      brightness: Tuple[float, float] = (0.75, 1.5),
-                      same_on_batch: bool = False
+                      same_on_batch: bool = False,
+                      **kwargs
                       ) -> torch.Tensor:
     """
     Adjust brightness of a batch of tensor images randomly.
@@ -288,7 +384,14 @@ def random_brightness(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
-    # Random brightness
+    brightness: Union[Tuple[float, float], float, int] = kwargs.get("parameters", {}).get("brightness")
+    if brightness is not None:
+        if isinstance(brightness, (float, int)):
+            brightness = (brightness, brightness)
+        same_on_batch = True
+    else:
+        brightness = (0.75, 1.5)
+
     transform = K.augmentation.ColorJitter(brightness=brightness, same_on_batch=same_on_batch, p=1.0)
     images_out: torch.Tensor = transform(images)
     return images_out
@@ -296,8 +399,8 @@ def random_brightness(images: torch.Tensor,
 
 @register_augmentation(name="random_hue")
 def random_hue(images: torch.Tensor,
-               hue: Tuple[float, float] = (-0.5, 0.5),
-               same_on_batch: bool = False
+               same_on_batch: bool = False,
+               **kwargs
                ) -> torch.Tensor:
     """
     Adjust hue of a batch of tensor images randomly.
@@ -311,6 +414,14 @@ def random_hue(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
+    hue: Union[Tuple[float, float], float, int] = kwargs.get("parameters", {}).get("hue")
+    if hue is not None:
+        if isinstance(hue, (float, int)):
+            hue = (hue, hue)
+        same_on_batch = True
+    else:
+        hue = (-0.5, 0.5)
+
     transform = K.augmentation.ColorJitter(hue=hue, same_on_batch=same_on_batch, p=1.0)
     images_out: torch.Tensor = transform(images)
     return images_out
@@ -318,8 +429,8 @@ def random_hue(images: torch.Tensor,
 
 @register_augmentation(name="random_saturation")
 def random_saturation(images: torch.Tensor,
-                      saturation: Tuple[float, float] = (0.5, 1.5),
-                      same_on_batch: bool = False
+                      same_on_batch: bool = False,
+                      **kwargs,
                       ) -> torch.Tensor:
     """
     Adjust saturation of a batch of tensor images randomly.
@@ -333,7 +444,14 @@ def random_saturation(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
-    # Random brightness
+    saturation: Union[Tuple[float, float], float, int] = kwargs.get("parameters", {}).get("saturation")
+    if saturation is not None:
+        if isinstance(saturation, (float, int)):
+            saturation = (saturation, saturation)
+        same_on_batch = True
+    else:
+        saturation = (0.5, 1.5)
+
     transform = K.augmentation.ColorJitter(saturation=saturation, same_on_batch=same_on_batch, p=1.0)
     images_out: torch.Tensor = transform(images)
     return images_out
@@ -341,8 +459,8 @@ def random_saturation(images: torch.Tensor,
 
 @register_augmentation(name="random_contrast")
 def random_contrast(images: torch.Tensor,
-                    contrast: Tuple[float, float] = (0.5, 1.5),
-                    same_on_batch: bool = False
+                    same_on_batch: bool = False,
+                    **kwargs
                     ) -> torch.Tensor:
     """
     Adjust contrast of a batch of tensor images randomly.
@@ -356,7 +474,14 @@ def random_contrast(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
-    # Random brightness
+    contrast: Union[Tuple[float, float], float, int] = kwargs.get("parameters", {}).get("constrast")
+    if contrast is not None:
+        if isinstance(contrast, (float, int)):
+            contrast = (contrast, contrast)
+        same_on_batch = True
+    else:
+        contrast = (0.5, 1.5)
+
     transform = K.augmentation.ColorJitter(contrast=contrast, same_on_batch=same_on_batch, p=1.0)
     images_out: torch.Tensor = transform(images)
     return images_out
@@ -364,9 +489,8 @@ def random_contrast(images: torch.Tensor,
 
 @register_augmentation(name="random_solarize")
 def random_solarize(images: torch.Tensor,
-                    thresholds: float = 0.1,
-                    additions: float = 0.1,
-                    same_on_batch: bool = False
+                    same_on_batch: bool = False,
+                    **kwargs
                     ) -> torch.Tensor:
     """
     Adjust solarize of a batch of tensor images randomly.
@@ -380,16 +504,27 @@ def random_solarize(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
-    # Random brightness
-    transform = K.augmentation.RandomSolarize(thresholds, additions, same_on_batch=same_on_batch, p=1.0)
+    threshold: Union[Tuple[float, float], float, int] = kwargs.get("parameters", {}).get("threshold")
+    addition: Union[Tuple[float, float], float, int] = kwargs.get("parameters", {}).get("addition")
+    if threshold is not None and addition is not None:
+        if isinstance(threshold, (float, int)):
+            threshold = (threshold, threshold)
+        if isinstance(addition, (float, int)):
+            addition = (addition, addition)
+        same_on_batch = True
+    else:
+        threshold = 0.1
+        addition = 0.1
+
+    transform = K.augmentation.RandomSolarize(threshold, addition, same_on_batch=same_on_batch, p=1.0)
     images_out: torch.Tensor = transform(images)
     return images_out
 
 
 @register_augmentation(name="random_posterize")
 def random_posterize(images: torch.Tensor,
-                     bits: int = 3,
-                     same_on_batch: bool = False
+                     same_on_batch: bool = False,
+                     **kwargs
                      ) -> torch.Tensor:
     """
     Adjust posterize of a batch of tensor images randomly.
@@ -403,15 +538,22 @@ def random_posterize(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
-    # Random brightness
-    transform = K.augmentation.RandomPosterize(bits, same_on_batch=same_on_batch, p=1.0)
+    bit: Union[Tuple[int, int], int] = kwargs.get("parameters", {}).get("bit")
+    if bit is not None:
+        if isinstance(bit, int):
+            bit = (bit, bit)
+        same_on_batch = True
+    else:
+        bit = 3
+
+    transform = K.augmentation.RandomPosterize(bit, same_on_batch=same_on_batch, p=1.0)
     images_out: torch.Tensor = transform(images)
     return images_out
 
 
 @register_augmentation(name="super_resolution")
 def super_resolution(images: torch.Tensor,
-                     factor: Tuple[float, float] = (0.25, 4.0)
+                     **kwargs
                      ) -> torch.Tensor:
     """
     Increase resolution of images randomly
@@ -426,8 +568,15 @@ def super_resolution(images: torch.Tensor,
     transformed tensor images of shape [B, C, H, W]
     ```
     """
-    B, C, H, W = images.shape
+    factor: Union[Tuple[float, float], float, int] = kwargs.get("parameters", {}).get('factor')
+    if factor is not None:
+        if isinstance(factor, (float, int)):
+            factor = (factor, factor)
+    else:
+        factor = (0.25, 4.0)
+
     factor: float = random.uniform(factor[0], factor[1])
+    B, C, H, W = images.shape
     new_height: int = round(H * factor)
     new_width: int = round(W * factor)
 

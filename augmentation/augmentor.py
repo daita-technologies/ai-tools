@@ -9,7 +9,7 @@ from pprint import pformat
 import traceback
 import random
 import os
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import augmentation.augmentations_list  # Import to register all augmentations
 from augmentation.registry import AUGMENTATIONS, CodeToAugment
@@ -33,8 +33,8 @@ class Augmentor:
                 input_image_paths: List[str],
                 augment_codes: List[str],
                 num_augments_per_image: int,
+                parameters: Dict[str, Dict[str, Any]],
                 output_dir: str,
-                **kwargs
                 ) -> Tuple[List[str], List[str]]:
         """
         Apply augmentation on a list of images.
@@ -110,12 +110,16 @@ class Augmentor:
         augment_name: str = CodeToAugment[augment_code]
         print(f"{augment_code}: {augment_name}")
 
-        print(f"Found {len(input_image_paths)} images.")
+        print(f"Found {len(input_image_paths)} images")
         output_image_paths: List[str] = []
         output_json_paths: List[str] = []
         try:
             output_image_paths, output_json_paths = self.__process_batch(
-                input_image_paths, augment_name, num_augments_per_image, output_dir, **kwargs
+                input_image_paths,
+                augment_name,
+                num_augments_per_image,
+                parameters[augment_code],
+                output_dir
             )
         except Exception:
             print(f"Error: {traceback.format_exc()}")
@@ -126,8 +130,8 @@ class Augmentor:
                         image_paths: List[str],
                         augment_name: str,
                         num_augments_per_image: int,
+                        parameters: Dict[str, Any],
                         output_dir: str,
-                        **kwargs
                         ) -> Tuple[List[str], List[str]]:
         """
         Generate list of augmented images from an image path.
@@ -198,10 +202,10 @@ class Augmentor:
         output_image_paths: List[str] = []
         output_json_paths: List[str] = []
 
-        # Augment batch
         for _ in range(num_augments_per_image):
+            # Augment a batch of images
             start = time.time()
-            images_tensor_out = AUGMENTATIONS[augment_name](images_tensor)
+            images_tensor_out = AUGMENTATIONS[augment_name](images_tensor, parameters=parameters)
             end = time.time()
             print(f"Generated {len(images_tensor)} images: {round(end - start, 2)} seconds")
 
@@ -235,11 +239,17 @@ class Augmentor:
         return output_image_paths, output_json_paths
 
     def __check_valid_augment_codes(self, augment_codes: List[str]) -> Optional[bool]:
+        # Map from an augment code to its augment name
+        supported_augment_codes: Dict[str, str] = {
+            augment_code: augment_name
+            for augment_code, augment_name in CodeToAugment.items()
+            if augment_name in AUGMENTATIONS.keys()
+        }
+
         for augment_code in augment_codes:
-            augment_name: str = CodeToAugment[augment_code]
-            if augment_name not in AUGMENTATIONS.keys():
+            if augment_code not in supported_augment_codes.keys():
                 message: str = (
-                    f"Only support these of augmentations: {pformat(CodeToAugment)}. "
+                    f"Only support these of augmentations: {pformat(supported_augment_codes)}. "
                     f"Got {augment_code=}!"
                 )
                 print(message)
