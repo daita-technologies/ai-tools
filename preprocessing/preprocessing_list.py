@@ -173,10 +173,10 @@ class NormalizeHue(BasePreprocessing):
         is_normalized: bool = False
 
         reference_image_hsv: np.ndarray = rgb2hsv(reference_image)
-        reference_hue: float = reference_image_hsv[0, :, :].var()
+        reference_hue: float = reference_image_hsv[:, :, 0].var()
 
         image_hsv: np.ndarray = rgb2hsv(image)
-        hue: float = image_hsv[0, :, :].var()
+        hue: float = image_hsv[:, :, 0].var()
 
         if abs(hue - reference_hue) / reference_hue > 0.75:
             matched_hsv = match_histograms(image_hsv, reference_image_hsv, multichannel=True)
@@ -216,7 +216,7 @@ class NormalizeSaturation(BasePreprocessing):
         is_normalized: bool = False
 
         reference_image_hsv: np.ndarray = rgb2hsv(reference_image)
-        reference_saturation: float = np.mean(reference_image_hsv[1])
+        reference_saturation: float = np.mean(reference_image_hsv[:, :, 1])
 
         image_hsv: np.ndarray = rgb2hsv(image)
         saturation: float = np.mean(image_hsv[:, :, 1])
