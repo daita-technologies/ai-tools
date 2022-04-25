@@ -4,6 +4,7 @@ from skimage.color import rgb2ycbcr
 from skimage.color import rgb2lab
 import kornia as K
 import cv2
+from typing import List, Union
 
 
 def calculate_contrast_score(image: np.ndarray) -> float:
@@ -138,3 +139,11 @@ class AdaptiveGammaCorrection:
         for i in unique_intensity:
             image_new[image == i] = torch.round(255 * (i / 255)**inverse_cdf[i])
         return image_new
+
+
+def get_index_of_median_value(array: Union[List[float], np.ndarray]) -> int:
+    """
+    Find index of the median value in a list or 1-D arry
+    """
+    index: int = np.argsort(array)[len(array) // 2]
+    return index

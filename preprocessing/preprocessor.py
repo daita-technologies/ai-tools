@@ -11,7 +11,12 @@ from typing import Callable, List, Optional, Dict
 import preprocessing.preprocessing_list  # Import to register all preprocessing
 from preprocessing.registry import PREPROCESSING, CodeToPreprocess
 from utils import read_image, resize_image, save_image
-from preprocessing.utils import calculate_signal_to_noise
+from preprocessing.references import (
+    find_reference_brightness_image,
+    find_reference_hue_image,
+    find_reference_saturation_image,
+    find_reference_signal_to_noise_image,
+)
 
 
 class Preprocessor:
@@ -34,7 +39,8 @@ class Preprocessor:
         # Mapping from a preprocess_code to its corresponding reference image path
         reference_path_dict: Dict[str, str] = {}
         for code in preprocess_codes:
-            reference_path_dict[code] = self.__find_reference_image_path(input_image_paths)
+            preprocess_name: str = CodeToPreprocess[code]
+            reference_path_dict[code] = self.__find_reference_image_path(input_image_paths, preprocess_name)
         return reference_path_dict
 
 
@@ -152,23 +158,15 @@ class Preprocessor:
             print(f"[pid {pid}] ERROR: {traceback.format_exc()}")
             return None
 
-    def __find_reference_image_path(self, input_image_paths: List[str]) -> str:
-        images: List[np.ndarray] = [
-            read_image(image_path)
-            for image_path in input_image_paths
-        ]
-
-        signal_to_noise_ratios: List[float] = [
-            calculate_signal_to_noise(image)
-            for image in images
-        ]
-
-        idxs_sorted: List[int] = sorted(
-            range(len(signal_to_noise_ratios)),
-            key=lambda i: signal_to_noise_ratios[i],
-        )
-        idx: int = idxs_sorted[0]
-        reference_image_path: str = input_image_paths[idx]
+    def __find_reference_image_path(self, input_image_paths: List[str], preprocess_name: str) -> str:
+        if preprocess_name == "normalize_brightness":
+            reference_image_path: str = find_reference_brightness_image(input_image_paths)
+        elif preprocess_name == "normalize_hue":
+            reference_image_path = find_reference_hue_image(input_image_paths)
+        elif preprocess_name == "normalize_saturation":
+            reference_image_path = find_reference_saturation_image(input_image_paths)
+        else:
+            reference_image_path = find_reference_signal_to_noise_image(input_image_paths)
         return reference_image_path
 
     @staticmethod
