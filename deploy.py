@@ -6,7 +6,7 @@ from fastapi import FastAPI
 
 import traceback
 import multiprocessing as mp
-from typing import List, Dict
+from typing import Any, List, Dict
 
 from augmentation.augmentor import Augmentor
 from preprocessing.preprocessor import Preprocessor
@@ -135,10 +135,12 @@ class Deployment:
                         "Missing 'num_augments_per_image' in request body!"
                     )
                 num_augments_per_image: int = data["num_augments_per_image"]
+                parameters: Dict[str, Dict[str, Any]] = data["parameters"]
                 output_image_paths, output_json_paths = self.augmentor.process(
                     input_image_paths,
                     augment_codes,
                     num_augments_per_image,
+                    parameters,
                     output_dir
                 )
                 return {
