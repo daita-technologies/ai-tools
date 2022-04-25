@@ -118,7 +118,7 @@ class Augmentor:
                 input_image_paths,
                 augment_name,
                 num_augments_per_image,
-                parameters[augment_code],
+                parameters.get(augment_name, {}),
                 output_dir
             )
         except Exception:
