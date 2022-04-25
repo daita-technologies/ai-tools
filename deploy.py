@@ -17,10 +17,10 @@ app = FastAPI()
 
 @serve.deployment(
     route_prefix="/ai",
-    num_replicas=1,
-    max_concurrent_queries=32,
+    num_replicas=mp.cpu_count(),
+    max_concurrent_queries=1000,
     ray_actor_options={
-        "num_cpus": mp.cpu_count(),
+        "num_cpus": 1,
         "num_gpus": 0
     },
 )
