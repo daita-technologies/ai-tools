@@ -130,11 +130,11 @@ class NormalizeBrightness(BasePreprocessing):
 
         is_normalized: bool = False
 
-        reference_image_hsv = rgb2hsv(reference_image)
-        reference_brightness: float = reference_image_hsv[2].var()
+        reference_image_hsv: np.ndarray = rgb2hsv(reference_image)
+        reference_brightness: float = reference_image_hsv[:, :, 2].var()
 
-        image_hsv = rgb2hsv(image)
-        brightness: float = image_hsv[2].var()
+        image_hsv: np.ndarray = rgb2hsv(image)
+        brightness: float = image_hsv[:, :, 2].var()
 
         if abs(brightness - reference_brightness) / reference_brightness > 0.75:
             matched_hsv = match_histograms(image_hsv, reference_image_hsv, multichannel=True)
