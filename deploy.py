@@ -167,7 +167,7 @@ class Deployment:
         except Exception:
             return JSONResponse(status_code=500, content=traceback.format_exc())
 
-    @app.get("/preprocessing/reference_image")
+    # @app.get("/preprocessing/reference_image")
     async def get_reference_image_path(self, request: Request) -> Dict[str, str]:
         data: Dict[str, object] = await request.json()
 
