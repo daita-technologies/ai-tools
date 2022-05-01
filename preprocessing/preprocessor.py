@@ -48,7 +48,7 @@ class Preprocessor:
                 input_image_paths: List[str],
                 output_dir: str,
                 preprocess_codes: List[str],
-                reference_path_dict: Dict[str, str],
+                reference_paths_dict: Dict[str, str],
                 **kwargs
                 ) -> List[str]:
 
@@ -62,25 +62,21 @@ class Preprocessor:
 
         # If reference images are not already given for each preprocessing method,
         # find those reference image
-        if len(reference_path_dict.keys()) == 0:
+        if len(reference_paths_dict.keys()) == 0:
             # Find reference image
             print("Finding reference image...")
             start = time.time()
-            reference_path_dict: Dict[str, str] = self.get_reference_image_path(input_image_paths, preprocess_codes)
+            reference_paths_dict: Dict[str, str] = self.get_reference_image_path(input_image_paths, preprocess_codes)
             end = time.time()
-            print(f"Found reference images {reference_path_dict}: {round(end - start, 4)} seconds.")
+            print(f"Found reference images {reference_paths_dict}: {round(end - start, 4)} seconds.")
         else:
-            print(f"Reference images are already given: {reference_path_dict}")
+            print(f"Reference images are already given: {reference_paths_dict}")
 
         # Load and resize all reference images beforehand
         reference_image_dict: Dict[str, np.ndarray] = {
             preprocess_code: resize_image(read_image(reference_image_path), 1024)
-            for preprocess_code, reference_image_path in reference_path_dict.items()
+            for preprocess_code, reference_image_path in reference_paths_dict.items()
         }
-
-        # Intitialize multiprocessing pool
-        num_processes = len(input_image_paths) if len(input_image_paths) <= mp.cpu_count() else mp.cpu_count()
-        pool = mp.Pool(num_processes)
 
         # Run process_one_image on each image in a separate process
         process_one_image: Callable = partial(
@@ -88,11 +84,21 @@ class Preprocessor:
             output_dir=output_dir,
             preprocess_codes=preprocess_codes,
             reference_image_dict=reference_image_dict
+        )
 
-        )
-        output_image_paths: List[str] = pool.map(
-            process_one_image, input_image_paths
-        )
+        # # Intitialize multiprocessing pool
+        # num_processes = len(input_image_paths) if len(input_image_paths) <= mp.cpu_count() else mp.cpu_count()
+        # pool = mp.Pool(num_processes)
+
+        # output_image_paths: List[str] = pool.map(
+        #     process_one_image, input_image_paths
+        # )
+
+        # Single process
+        output_image_paths: List[str] = [
+            process_one_image(input_image_path)
+            for input_image_path in input_image_paths
+        ]
 
         # Remove error image paths
         output_image_paths = [
