@@ -150,7 +150,7 @@ class Deployment:
 
             # Handle preprocessing
             elif type_ == "preprocessing":
-                reference_path_dict: Dict[str, str] = data["reference_images"]
+                reference_paths_dict: Dict[str, str] = data["reference_images"]
                 preprocess_codes: List[str] = list(filter(
                     lambda code: "PRE" in code,
                     codes
@@ -159,7 +159,7 @@ class Deployment:
                     input_image_paths,
                     output_dir,
                     preprocess_codes,
-                    reference_path_dict
+                    reference_paths_dict
                 )
                 return {
                     "images_paths": output_image_paths,

@@ -54,6 +54,7 @@ class Preprocessor:
 
         print("*" * 100)
         print(f"Found {len(input_image_paths)} images.")
+        start_preprocess = time.time()
 
         # If preprocess codes are not given, run all preprocessing methods
         if len(preprocess_codes) == 0:
@@ -106,6 +107,12 @@ class Preprocessor:
             for image_path in output_image_paths
             if image_path is not None
         ]
+
+        end_preprocess = time.time()
+        print(
+            f"Done preprocessing {len(input_image_paths)} images: "
+            f"{round(end_preprocess - start_preprocess, 4)} seconds"
+        )
         return output_image_paths
 
     def _process_one_image(self,
