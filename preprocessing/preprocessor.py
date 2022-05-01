@@ -53,7 +53,7 @@ class Preprocessor:
                 ) -> List[str]:
 
         print("*" * 100)
-        print(f"Found {len(input_image_paths)} images.")
+        print(f"Found {len(input_image_paths)} images")
         start_preprocess = time.time()
 
         # If preprocess codes are not given, run all preprocessing methods

@@ -101,6 +101,10 @@ class Augmentor:
         ]
         ```
         """
+        print("*" * 100)
+        print(f"Found {len(input_image_paths)} images")
+        start_augmenting = time.time()
+
         if len(augment_codes) > 0:
             self.__check_valid_augment_codes(augment_codes)
         else:
@@ -110,20 +114,19 @@ class Augmentor:
         augment_name: str = CodeToAugment[augment_code]
         print(f"{augment_code}: {augment_name}")
 
-        print(f"Found {len(input_image_paths)} images")
-        output_image_paths: List[str] = []
-        output_json_paths: List[str] = []
-        try:
-            output_image_paths, output_json_paths = self.__process_batch(
-                input_image_paths,
-                augment_name,
-                num_augments_per_image,
-                parameters.get(augment_name, {}),
-                output_dir
-            )
-        except Exception:
-            print(f"Error: {traceback.format_exc()}")
+        output_image_paths, output_json_paths = self.__process_batch(
+            input_image_paths,
+            augment_name,
+            num_augments_per_image,
+            parameters.get(augment_name, {}),
+            output_dir
+        )
 
+        end_augmenting = time.time()
+        print(
+            f"Done augmenting {len(input_image_paths)} images: "
+            f"{round(end_augmenting - start_augmenting, 4)} seconds"
+        )
         return output_image_paths, output_json_paths
 
     def __process_batch(self,
@@ -235,7 +238,6 @@ class Augmentor:
 
             assert len(output_image_paths) == len(output_json_paths)
 
-        print("*" * 100)
         return output_image_paths, output_json_paths
 
     def __check_valid_augment_codes(self, augment_codes: List[str]) -> Optional[bool]:
