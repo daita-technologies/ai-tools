@@ -19,7 +19,7 @@ app = FastAPI()
     num_replicas=1,
     max_concurrent_queries=100,
     ray_actor_options={
-        "num_cpus": mp.cpu_count(),
+        "num_cpus": 1,
         "num_gpus": 0
     },
 )

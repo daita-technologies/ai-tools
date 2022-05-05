@@ -6,7 +6,6 @@ import time
 import json
 import uuid
 from pprint import pformat
-import traceback
 import random
 import os
 from typing import Any, Dict, List, Optional, Tuple
@@ -102,7 +101,9 @@ class Augmentor:
         ```
         """
         print("*" * 100)
-        print(f"Found {len(input_image_paths)} images")
+
+        pid = os.getpid()
+        print(f"[AUGMENTATION]][pid {pid}] Found {len(input_image_paths)} images")
         start_augmenting = time.time()
 
         if len(augment_codes) > 0:
@@ -124,7 +125,7 @@ class Augmentor:
 
         end_augmenting = time.time()
         print(
-            f"Done augmenting {len(input_image_paths)} images: "
+            f"[AUGMENTATION]][pid {pid}] Done augmenting {len(input_image_paths)} images: "
             f"{round(end_augmenting - start_augmenting, 4)} seconds"
         )
         return output_image_paths, output_json_paths
@@ -181,13 +182,15 @@ class Augmentor:
         ]
         ```
         """
+        pid = os.getpid()
+
         original_sizes: List[Tuple[int, int]] = []  # original height and widths of images
         images_tensor: List[torch.Tensor] = []
         for image_path in image_paths:
             start = time.time()
             image: np.ndarray = read_image(image_path)
             end = time.time()
-            print(f"Read image {image_path}: {round(end - start, 2)} seconds")
+            print(f"[AUGMENTATION]][pid {pid}] Read image {image_path}: {round(end - start, 2)} seconds")
 
             # Resize tensor images for faster processeing
             image_tensor: torch.Tensor = image_to_tensor(image).to(self.device)
@@ -195,7 +198,7 @@ class Augmentor:
             start = time.time()
             image_tensor: torch.Tensor = K.geometry.resize(image_tensor, size=(1024, 1024))
             end = time.time()
-            print(f"Resize image: {round(end - start, 2)} seconds")
+            print(f"[AUGMENTATION]][pid {pid}] Resize image: {round(end - start, 2)} seconds")
             images_tensor.append(image_tensor)
 
         # Stack multiple same images to form a batch
@@ -210,7 +213,7 @@ class Augmentor:
             start = time.time()
             images_tensor_out = AUGMENTATIONS[augment_name](images_tensor, parameters=parameters)
             end = time.time()
-            print(f"Generated {len(images_tensor)} images: {round(end - start, 2)} seconds")
+            print(f"[AUGMENTATION]][pid {pid}] Generated {len(images_tensor)} images: {round(end - start, 2)} seconds")
 
             # Save generated images
             for image_path, image_tensor, original_size in zip(image_paths, images_tensor_out, original_sizes):
@@ -227,7 +230,7 @@ class Augmentor:
                 start = time.time()
                 save_image(output_path, image)
                 end = time.time()
-                print(f"Save image {output_path}: {round(end - start, 2)} seconds")
+                print(f"[AUGMENTATION]][pid {pid}] Save image {output_path}: {round(end - start, 2)} seconds")
 
                 # Save corresponding output json
                 json_name: str = output_name + ".json"
@@ -241,6 +244,8 @@ class Augmentor:
         return output_image_paths, output_json_paths
 
     def __check_valid_augment_codes(self, augment_codes: List[str]) -> Optional[bool]:
+        pid = os.getpid()
+
         # Map from an augment code to its augment name
         supported_augment_codes: Dict[str, str] = {
             augment_code: augment_name
@@ -251,6 +256,7 @@ class Augmentor:
         for augment_code in augment_codes:
             if augment_code not in supported_augment_codes.keys():
                 message: str = (
+                    f"[AUGMENTATION]][pid {pid}] "
                     f"Only support these of augmentations: {pformat(supported_augment_codes)}. "
                     f"Got {augment_code=}!"
                 )
@@ -272,10 +278,11 @@ class Augmentor:
         -------
         "cpu" or "cuda" device
         """
+        pid = os.getpid()
         if use_gpu and torch.cuda.is_available():
             device: torch.device = torch.device("cuda:0")
-            print(f"{use_gpu=} and cuda is available. Initialized {device}")
+            print(f"[AUGMENTATION]][pid {pid}] {use_gpu=} and cuda is available. Initialized {device}")
         else:
             device = torch.device("cpu")
-            print(f"{use_gpu=} and cuda not found. Initialized {device}")
+            print(f"[AUGMENTATION]][pid {pid}] {use_gpu=} and cuda not found. Initialized {device}")
         return device

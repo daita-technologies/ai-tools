@@ -16,7 +16,7 @@ app = FastAPI()
 
 @serve.deployment(
     route_prefix="/preprocessing",
-    num_replicas=mp.cpu_count(),
+    num_replicas=mp.cpu_count() - 1 if mp.cpu_count() > 1 else 1,
     max_concurrent_queries=100,
     ray_actor_options={
         "num_cpus": 1,
