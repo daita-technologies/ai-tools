@@ -2,7 +2,6 @@ import numpy as np
 from skimage.color import rgb2hsv
 from typing import List
 
-from utils import read_image
 from preprocessing.preprocessing_utils import (
     calculate_signal_to_noise,
     get_index_of_median_value
