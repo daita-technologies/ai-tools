@@ -4,7 +4,7 @@ from typing import Dict, Any, Tuple
 from utils import resize_image
 from preprocessing.base import BasePreprocessing
 from preprocessing.registry import register_preprocessing
-from preprocessing.utils import (
+from preprocessing.preprocessing_utils import (
     calculate_contrast_score,
     calculate_sharpness_score,
 )

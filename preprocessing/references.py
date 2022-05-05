@@ -3,17 +3,19 @@ from skimage.color import rgb2hsv
 from typing import List
 
 from utils import read_image
-from preprocessing.utils import (
+from preprocessing.preprocessing_utils import (
     calculate_signal_to_noise,
     get_index_of_median_value
 )
 
 
-def find_reference_brightness_image(input_image_paths: List[str]) -> str:
+def find_reference_brightness_image(input_images: List[np.ndarray],
+                                    input_image_paths: List[str]
+                                    ) -> str:
     hsv_images: List[np.ndarray] = [
-        rgb2hsv(read_image(image_path))
-        for image_path in input_image_paths
+        rgb2hsv(image) for image in input_images
     ]
+
     # List of images' brightness
     brightness_ls: List[float] = [
         hsv_image[:, :, 2].var()
@@ -25,10 +27,11 @@ def find_reference_brightness_image(input_image_paths: List[str]) -> str:
     return reference_image_path
 
 
-def find_reference_hue_image(input_image_paths: List[str]) -> str:
+def find_reference_hue_image(input_images: List[np.ndarray],
+                             input_image_paths: List[str]
+                             ) -> str:
     hsv_images: List[np.ndarray] = [
-        rgb2hsv(read_image(image_path))
-        for image_path in input_image_paths
+        rgb2hsv(image) for image in input_images
     ]
     # List of images' hue
     hue_ls: List[float] = [
@@ -41,10 +44,11 @@ def find_reference_hue_image(input_image_paths: List[str]) -> str:
     return reference_image_path
 
 
-def find_reference_saturation_image(input_image_paths: List[str]) -> str:
+def find_reference_saturation_image(input_images: List[np.ndarray],
+                                    input_image_paths: List[str]
+                                    ) -> str:
     hsv_images: List[np.ndarray] = [
-        rgb2hsv(read_image(image_path))
-        for image_path in input_image_paths
+        rgb2hsv(image) for image in input_images
     ]
     # List of images' saturation
     saturation_ls: List[float] = [
@@ -57,15 +61,12 @@ def find_reference_saturation_image(input_image_paths: List[str]) -> str:
     return reference_image_path
 
 
-def find_reference_signal_to_noise_image(input_image_paths: List[str]) -> str:
-    images: List[np.ndarray] = [
-        read_image(image_path)
-        for image_path in input_image_paths
-    ]
-
+def find_reference_signal_to_noise_image(input_images: List[np.ndarray],
+                                         input_image_paths: List[str]
+                                         ) -> str:
     signal_to_noise_ratios: List[float] = [
         calculate_signal_to_noise(image)
-        for image in images
+        for image in input_images
     ]
 
     idxs_sorted: List[int] = sorted(

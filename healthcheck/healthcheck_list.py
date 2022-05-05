@@ -4,7 +4,7 @@ import os
 from typing import Tuple
 
 from healthcheck.registry import register_healthcheck
-from preprocessing.utils import (
+from preprocessing.preprocessing_utils import (
     calculate_contrast_score,
     calculate_signal_to_noise,
     calculate_sharpness_score,

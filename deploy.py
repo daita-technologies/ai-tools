@@ -147,23 +147,6 @@ class Deployment:
                     "images_paths": output_image_paths,
                     "json_paths": output_json_paths
                 }
-
-            # Handle preprocessing
-            elif type_ == "preprocessing":
-                reference_paths_dict: Dict[str, str] = data["reference_images"]
-                preprocess_codes: List[str] = list(filter(
-                    lambda code: "PRE" in code,
-                    codes
-                ))
-                output_image_paths = self.preprocessor.process(
-                    input_image_paths,
-                    output_dir,
-                    preprocess_codes,
-                    reference_paths_dict
-                )
-                return {
-                    "images_paths": output_image_paths,
-                }
         except Exception:
             return JSONResponse(status_code=500, content=traceback.format_exc())
 
@@ -175,7 +158,7 @@ class Deployment:
             input_image_paths: str = data["images_paths"]
             preprocess_codes: List[str] = data["codes"]
             # Mapping from a preprocess_code to its corresponding reference image path
-            reference_path_dict: Dict[str, str] = self.preprocessor.get_reference_image_path(
+            reference_path_dict: Dict[str, str] = self.preprocessor.get_reference_image_paths(
                 input_image_paths,
                 preprocess_codes
             )
