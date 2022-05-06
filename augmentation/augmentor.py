@@ -110,10 +110,13 @@ class Augmentor:
             self.__check_valid_augment_codes(augment_codes)
         else:
             augment_codes: List[str] = list(CodeToAugment.keys())
+        print(
+            f"[AUGMENTATION][pid {pid}] "
+            f"{ {augment_code: CodeToAugment[augment_code] for augment_code in augment_codes} }"
+        )
 
         augment_code: str = random.choice(augment_codes)
         augment_name: str = CodeToAugment[augment_code]
-        print(f"{augment_code}: {augment_name}")
 
         output_image_paths, output_json_paths = self.__process_batch(
             input_image_paths,
@@ -220,8 +223,10 @@ class Augmentor:
             images_tensor_out = AUGMENTATIONS[augment_name](images_tensor, parameters=parameters)
             end = time.time()
             print(
+                "\n"
                 f"[AUGMENTATION][pid {pid}] "
                 f"{augment_name} {len(images_tensor)} images: {round(end - start, 2)} seconds"
+                "\n"
             )
 
             # Save generated images

@@ -128,7 +128,10 @@ class Preprocessor:
         Return saved output image path or None.
         """
         pid: int = os.getpid()
-        print(f"[PREPROCESSING][pid {pid}] Preprocessing {input_image_path}")
+        print(
+            "\n"
+            f"[PREPROCESSING][pid {pid}] Preprocessing {input_image_path}"
+        )
         try:
             start = time.time()
 
@@ -170,6 +173,7 @@ class Preprocessor:
             print(
                 f"[PREPROCESSING][pid {pid}] "
                 f"Save image {output_image_path}: {round(end - start, 2)} seconds"
+                "\n"
             )
             return output_image_path
 
@@ -207,10 +211,11 @@ class Preprocessor:
         -------
         "cpu" or "cuda" device
         """
+        pid = os.getpid()
         if use_gpu and torch.cuda.is_available():
             device: torch.device = torch.device("cuda:0")
-            print(f"[PREPROCESSING] {use_gpu=} and cuda is available. Initialized {device}")
+            print(f"[PREPROCESSING][pid {pid}] {use_gpu=} and cuda is available. Initialized {device}")
         else:
             device = torch.device("cpu")
-            print(f"[PREPROCESSING] {use_gpu=} and cuda not found. Initialized {device}")
+            print(f"[PREPROCESSING][pid {pid}] {use_gpu=} and cuda not found. Initialized {device}")
         return device
