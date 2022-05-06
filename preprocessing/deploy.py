@@ -2,29 +2,23 @@ import ray
 from ray import serve
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from fastapi import FastAPI
 
 import traceback
-import multiprocessing as mp
 from typing import List, Dict
 
 from preprocessing.preprocessor import Preprocessor
 
 
-app = FastAPI()
-
-
 @serve.deployment(
     route_prefix="/preprocessing",
-    num_replicas=mp.cpu_count() - 1 if mp.cpu_count() > 1 else 1,
+    num_replicas=1,
     max_concurrent_queries=100,
     ray_actor_options={
         "num_cpus": 1,
         "num_gpus": 0
     },
 )
-@serve.ingress(app)
-class Deployment:
+class PreprocessingDeployment:
     def __init__(self, use_gpu: bool = False):
         """
         Deploy and apply random augmentations on batch of images with Ray Serve.
@@ -37,8 +31,7 @@ class Deployment:
         self.use_gpu: bool = use_gpu
         self.preprocessor = Preprocessor(use_gpu)
 
-    @app.post("/")
-    async def process(self, request: Request) -> List[Dict[str, object]]:
+    async def __call__(self, request: Request) -> List[Dict[str, object]]:
         """
         Wrapper of `Preprocessor.process` when called with HTTP request.
 
@@ -137,4 +130,4 @@ if __name__ == "__main__":
     )
 
     # Deploy
-    Deployment.deploy(use_gpu=False)
+    PreprocessingDeployment.deploy(use_gpu=False)
