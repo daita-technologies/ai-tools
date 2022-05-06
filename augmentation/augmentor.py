@@ -187,19 +187,25 @@ class Augmentor:
         original_sizes: List[Tuple[int, int]] = []  # original height and widths of images
         images_tensor: List[torch.Tensor] = []
         for image_path in image_paths:
-            start = time.time()
+            start_read = time.time()
             image: np.ndarray = read_image(image_path)
-            end = time.time()
-            print(f"[AUGMENTATION][pid {pid}] Read image {image_path}: {round(end - start, 2)} seconds")
+            end_read = time.time()
 
             # Resize tensor images for faster processeing
             image_tensor: torch.Tensor = image_to_tensor(image).to(self.device)
             original_sizes.append(image_tensor.shape[-2:])
-            start = time.time()
+
+            start_resize = time.time()
             image_tensor: torch.Tensor = K.geometry.resize(image_tensor, size=(1024, 1024))
-            end = time.time()
-            print(f"[AUGMENTATION][pid {pid}] Resize image: {round(end - start, 2)} seconds")
+            end_resize = time.time()
             images_tensor.append(image_tensor)
+
+            print(
+                f"[AUGMENTATION][pid {pid}] "
+                f"{image_path} | "
+                f"Read image: {round(end_read - start_read, 2)} seconds | "
+                f"Resize image: {round(end_resize - start_resize, 2)} seconds"
+            )
 
         # Stack multiple same images to form a batch
         # shape: [B, C, H, W]
