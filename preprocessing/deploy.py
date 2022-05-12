@@ -118,7 +118,13 @@ class PreprocessingDeployment:
                 "images_paths": output_image_paths,
             }
         except Exception:
-            return JSONResponse(status_code=500, content=traceback.format_exc())
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "images_paths": [],
+                    "error": traceback.format_exc()
+                }
+            )
 
 
 if __name__ == "__main__":

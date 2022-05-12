@@ -47,7 +47,7 @@ def save_image(image_path: str, image: np.ndarray) -> None:
 
 
 def resize_image(image: np.ndarray, size: Union[Tuple[int, int], int]) -> np.ndarray:
-    height, width, _ = image.shape
+    height, width = image.shape[:2]
     if isinstance(size, int):
         if height < width:
             new_height = size

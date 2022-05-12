@@ -51,7 +51,6 @@ class Preprocessor:
             )
         return reference_paths_dict
 
-
     def process(self,
                 input_image_paths: List[str],
                 output_dir: str,
@@ -69,6 +68,16 @@ class Preprocessor:
         # If preprocess codes are not given, run all preprocessing methods
         if len(preprocess_codes) == 0:
             preprocess_codes = list(CodeToPreprocess.keys())
+
+        # if grayscale (PRE-001) in preprocess_codes, remove all other codes,
+        # except for auto orientation (PRE-000) and super-resolution (PRE-009)
+        if "PRE-001" in preprocess_codes:
+            preprocess_codes = [
+                code
+                for code in preprocess_codes
+                if code in ("PRE-000", "PRE-001", "PRE-009")
+            ]
+
         print(
             f"[PREPROCESSING][pid {pid}] "
             f"Preprocess codes: { {code: CodeToPreprocess[code] for code in preprocess_codes} }"
@@ -101,14 +110,18 @@ class Preprocessor:
         # Process each input image
         output_image_paths: List[str] = []
         for input_image_path in input_image_paths:
-            output_image_path: Optional[str] = self.__process_one_image(
-                input_image_path,
-                output_dir,
-                preprocess_codes,
-                reference_images_dict
-            )
-            if output_image_path is not None:
+            try:
+                output_image_path: Optional[str] = self.__process_one_image(
+                    input_image_path,
+                    output_dir,
+                    preprocess_codes,
+                    reference_images_dict
+                )
                 output_image_paths.append(output_image_path)
+            # If there are some errors (input image not found, weird image...) then skip the image
+            except Exception:
+                print(f"[PREPROCESSING][pid {pid}] ERROR: {traceback.format_exc()}")
+                continue
 
         end_preprocess = time.time()
         print(
@@ -132,55 +145,50 @@ class Preprocessor:
             "\n"
             f"[PREPROCESSING][pid {pid}] Preprocessing {input_image_path}"
         )
-        try:
-            start = time.time()
+        start = time.time()
 
-            image: np.ndarray = read_image(input_image_path)
-            H, W, _ = image.shape
-            # Resize images for faster processeing
-            image = resize_image(image, size=1024)
+        image: np.ndarray = read_image(input_image_path)
+        H, W, _ = image.shape
+        # Resize images for faster processeing
+        image = resize_image(image, size=1024)
 
-            for preprocess_code in preprocess_codes:
-                try:
-                    preprocess_name: str = CodeToPreprocess[preprocess_code]
-                    reference_image: np.ndarray = reference_images_dict[preprocess_code]
-                    image, is_normalized = PREPROCESSING[preprocess_name]().process(
-                        image,
-                        reference_image,
-                        image_path=input_image_path
-                    )
-                    print(f"[PREPROCESSING][pid {pid}] {preprocess_name}:", is_normalized)
+        for preprocess_code in preprocess_codes:
+            try:
+                preprocess_name: str = CodeToPreprocess[preprocess_code]
+                reference_image: np.ndarray = reference_images_dict[preprocess_code]
+                image, is_normalized = PREPROCESSING[preprocess_name]().process(
+                    image,
+                    reference_image,
+                    image_path=input_image_path
+                )
+                print(f"[PREPROCESSING][pid {pid}] {preprocess_name}:", is_normalized)
 
-                except Exception:
-                    print(f"[PREPROCESSING][pid {pid}] ERROR: {preprocess_name}")
-                    print(f"[PREPROCESSING][pid {pid}] {traceback.format_exc()}")
-                    continue
+            except Exception:
+                print(f"[PREPROCESSING][pid {pid}] ERROR: {preprocess_name}")
+                print(f"[PREPROCESSING][pid {pid}] {traceback.format_exc()}")
+                continue
 
-            # Resize back to original size
-            image = resize_image(image, size=H if H < W else W)
-            end = time.time()
-            print(
-                f"[PREPROCESSING][pid {pid}] "
-                f"Done preprocessing: {round(end - start, 4)} seconds"
-            )
+        # Resize back to original size
+        image = resize_image(image, size=H if H < W else W)
+        end = time.time()
+        print(
+            f"[PREPROCESSING][pid {pid}] "
+            f"Done preprocessing: {round(end - start, 4)} seconds"
+        )
 
-            # Save output image
-            image_name: str = os.path.basename(input_image_path)
-            output_image_path: str = os.path.join(output_dir, f"preprocessed_{image_name}")
-            start = time.time()
-            save_image(output_image_path, image)
-            end = time.time()
-            print(
-                f"[PREPROCESSING][pid {pid}] "
-                f"Save image {output_image_path}: {round(end - start, 2)} seconds"
-                "\n"
-            )
-            return output_image_path
+        # Save output image
+        image_name: str = os.path.basename(input_image_path)
+        output_image_path: str = os.path.join(output_dir, f"preprocessed_{image_name}")
+        start = time.time()
+        save_image(output_image_path, image)
+        end = time.time()
+        print(
+            f"[PREPROCESSING][pid {pid}] "
+            f"Save image {output_image_path}: {round(end - start, 2)} seconds"
+            "\n"
+        )
+        return output_image_path
 
-        # If there are some errors (input image not found, weird image...) then return None
-        except Exception:
-            print(f"[PREPROCESSING][pid {pid}] ERROR: {traceback.format_exc()}")
-            return None
 
     def __find_reference_image_path(self,
                                     input_images: List[np.ndarray],

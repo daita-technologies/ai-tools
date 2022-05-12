@@ -100,7 +100,7 @@ class Grayscale(BasePreprocessing):
         from skimage.color import rgb2gray
 
         is_normalized: bool = True
-        image_out: np.ndarray = rgb2gray(image)
+        image_out: np.ndarray = (rgb2gray(image) * 255).astype(np.uint8)
         return image_out, is_normalized
 
 
@@ -365,7 +365,7 @@ class IncreaseResolution(BasePreprocessing):
         normalized tensor images of shape [B, C, H, W]
         """
         is_normalized: bool = False
-        H, W, _ = image.shape
+        H, W = image.shape[:2]
 
         new_height = int(H * self.scale_factor)
         new_width = int(W * self.scale_factor)
