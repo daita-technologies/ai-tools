@@ -5,6 +5,7 @@ import kornia as K
 import boto3
 from PIL import Image
 
+import os
 import base64
 from io import BytesIO
 import random
@@ -63,7 +64,11 @@ def resize_image(image: np.ndarray, size: Union[Tuple[int, int], int]) -> np.nda
 
 
 class S3Downloader:
-    s3 = boto3.client("s3")
+    s3 = boto3.client(
+        "s3",
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
+    )
 
     @staticmethod
     def split_s3_path(path: str) -> Tuple[str, str]:
