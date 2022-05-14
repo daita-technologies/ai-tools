@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import kornia as K
+from dotenv import load_dotenv
 
 import time
 import json
@@ -13,6 +14,9 @@ from typing import Any, Dict, List, Optional, Tuple
 import augmentation.augmentations_list  # Import to register all augmentations
 from augmentation.registry import AUGMENTATIONS, CodeToAugment
 from utils import image_to_tensor, read_image, save_image, tensor_to_image
+
+
+load_dotenv()
 
 
 class Augmentor:

@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from dotenv import load_dotenv
 
 import time
 import os
@@ -15,6 +16,9 @@ from preprocessing.references import (
     find_reference_saturation_image,
     find_reference_signal_to_noise_image,
 )
+
+
+load_dotenv()
 
 
 class Preprocessor:
