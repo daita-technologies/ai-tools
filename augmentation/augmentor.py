@@ -9,6 +9,7 @@ import uuid
 from pprint import pformat
 import random
 import os
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import augmentation.augmentations_list  # Import to register all augmentations
@@ -16,9 +17,8 @@ from augmentation.registry import AUGMENTATIONS, CodeToAugment
 from utils import image_to_tensor, read_image, save_image, tensor_to_image
 
 
-ENV_PATH: str = os.path.join(
-    os.path.abspath(os.getcwd()),
-    ".env"
+ENV_PATH: str = str(
+    Path(__file__).parent.parent.absolute() / ".env"
 )
 load_dotenv(ENV_PATH)
 

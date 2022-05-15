@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 
 import time
 import os
+from pathlib import Path
 import traceback
 from typing import List, Optional, Dict
 
@@ -18,9 +19,8 @@ from preprocessing.references import (
 )
 
 
-ENV_PATH: str = os.path.join(
-    os.path.abspath(os.getcwd()),
-    ".env"
+ENV_PATH: str = str(
+    Path(__file__).parent.parent.absolute() / ".env"
 )
 load_dotenv(ENV_PATH)
 
