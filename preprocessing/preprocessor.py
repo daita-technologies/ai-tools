@@ -18,7 +18,11 @@ from preprocessing.references import (
 )
 
 
-load_dotenv()
+ENV_PATH: str = os.path.join(
+    os.path.abspath(os.getcwd()),
+    ".env"
+)
+load_dotenv(ENV_PATH)
 
 
 class Preprocessor:

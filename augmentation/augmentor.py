@@ -16,7 +16,11 @@ from augmentation.registry import AUGMENTATIONS, CodeToAugment
 from utils import image_to_tensor, read_image, save_image, tensor_to_image
 
 
-load_dotenv()
+ENV_PATH: str = os.path.join(
+    os.path.abspath(os.getcwd()),
+    ".env"
+)
+load_dotenv(ENV_PATH)
 
 
 class Augmentor:
