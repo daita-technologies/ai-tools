@@ -73,18 +73,25 @@ class Preprocessor:
         print(f"[PREPROCESSING][pid {pid}] Found {len(input_image_paths)} images")
         start_preprocess = time.time()
 
-        # If preprocess codes are not given, run all preprocessing methods
+        # In mode 'auto' (preprocess codes are not given):
+        # Run all preprocessing methods,
+        # except grayscale (PRE-001) and super-resolution (PRE-009)
         if len(preprocess_codes) == 0:
-            preprocess_codes = list(CodeToPreprocess.keys())
-
-        # if grayscale (PRE-001) in preprocess_codes, remove all other codes,
-        # except for auto orientation (PRE-000) and super-resolution (PRE-009)
-        if "PRE-001" in preprocess_codes:
             preprocess_codes = [
                 code
-                for code in preprocess_codes
-                if code in ("PRE-000", "PRE-001", "PRE-009")
+                for code in CodeToPreprocess.keys()
+                if code not in ("PRE-001", "PRE-009")
             ]
+        else:
+            # In mode 'expert' (some preprocess codes are given):
+            # If grayscale (PRE-001) in preprocess_codes,
+            # remove all other codes, except for auto orientation (PRE-000) and super-resolution (PRE-009)
+            if "PRE-001" in preprocess_codes:
+                preprocess_codes = [
+                    code
+                    for code in preprocess_codes
+                    if code in ("PRE-000", "PRE-001", "PRE-009")
+                ]
 
         print(
             f"[PREPROCESSING][pid {pid}] "
@@ -149,10 +156,7 @@ class Preprocessor:
         Return saved output image path or None.
         """
         pid: int = os.getpid()
-        print(
-            "\n"
-            f"[PREPROCESSING][pid {pid}] Preprocessing {input_image_path}"
-        )
+        print(f"[PREPROCESSING][pid {pid}] Preprocessing {input_image_path}")
         start = time.time()
 
         image: np.ndarray = read_image(input_image_path)
@@ -193,7 +197,6 @@ class Preprocessor:
         print(
             f"[PREPROCESSING][pid {pid}] "
             f"Save image {output_image_path}: {round(end - start, 2)} seconds"
-            "\n"
         )
         return output_image_path
 
