@@ -86,8 +86,8 @@ def random_translate(images: torch.Tensor,
     ------
     transformed tensor images of shape [B, C, H, W]
     """
-    translate_horizontal: float = kwargs.get("parameters", {}).get("translate_horizontal", 0.)
-    translate_vertical: float = kwargs.get("parameters", {}).get("translate_vertical", 0.)
+    translate_horizontal: float = kwargs.get("parameters", {}).get("translate_horizontal", None)
+    translate_vertical: float = kwargs.get("parameters", {}).get("translate_vertical", None)
     # If translate is given, ensure the same output over the whole batch
     if translate_horizontal is not None and translate_vertical is not None:
         translate: Tuple[float, float] = (translate_horizontal, translate_vertical)
