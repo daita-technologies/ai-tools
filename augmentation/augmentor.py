@@ -130,7 +130,7 @@ class Augmentor:
             input_image_paths,
             augment_name,
             num_augments_per_image,
-            parameters,
+            parameters[augment_code],
             output_dir
         )
 
@@ -225,16 +225,15 @@ class Augmentor:
         output_image_paths: List[str] = []
         output_json_paths: List[str] = []
 
+        print(f"[AUGMENTATION][pid {pid}] Augmenting batch of {len(images_tensor)} images...")
         for _ in range(num_augments_per_image):
             # Augment a batch of images
             start = time.time()
             images_tensor_out = AUGMENTATIONS[augment_name](images_tensor, parameters=parameters)
             end = time.time()
             print(
-                "\n"
                 f"[AUGMENTATION][pid {pid}] "
-                f"{augment_name} {len(images_tensor)} images: {round(end - start, 2)} seconds"
-                "\n"
+                f"{augment_name=} | {parameters=}: {round(end - start, 2)} seconds"
             )
 
             # Save generated images
