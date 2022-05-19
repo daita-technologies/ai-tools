@@ -111,7 +111,7 @@ class Augmentor:
         print("*" * 100)
 
         pid = os.getpid()
-        print(f"[AUGMENTATION][pid {pid}] Found {len(input_image_paths)} images")
+        print(f"[AUGMENTATION][pid {pid}] Found {len(input_image_paths)} images: {input_image_paths}")
         start_augmenting = time.time()
 
         if len(augment_codes) > 0:
@@ -225,7 +225,7 @@ class Augmentor:
         output_image_paths: List[str] = []
         output_json_paths: List[str] = []
 
-        print(f"[AUGMENTATION][pid {pid}] Augmenting batch of {len(images_tensor)} images...")
+        print(f"[AUGMENTATION][pid {pid}] Augmenting batch of {len(images_tensor)} images: {parameters=}")
         for _ in range(num_augments_per_image):
             # Augment a batch of images
             start = time.time()
@@ -233,14 +233,15 @@ class Augmentor:
             end = time.time()
             print(
                 f"[AUGMENTATION][pid {pid}] "
-                f"{augment_name=} | {parameters=}: {round(end - start, 2)} seconds"
+                f"{augment_name=}: {round(end - start, 2)} seconds"
             )
 
             # Save generated images
             for image_path, image_tensor, original_size in zip(image_paths, images_tensor_out, original_sizes):
-                # Resize back to original size
-                height, width = original_size
-                image_tensor = K.geometry.resize(image_tensor, size=(height, width))
+                # Resize images back to original size, EXCEPT for super_resolution
+                if augment_name != "super_resolution":
+                    height, width = original_size
+                    image_tensor = K.geometry.resize(image_tensor, size=(height, width))
                 image: np.ndarray = tensor_to_image(image_tensor)
 
                 name_without_ext, ext = os.path.splitext(os.path.basename(image_path))

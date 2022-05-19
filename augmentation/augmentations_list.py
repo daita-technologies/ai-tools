@@ -450,7 +450,7 @@ def random_saturation(images: torch.Tensor,
             saturation = (saturation, saturation)
         same_on_batch = True
     else:
-        saturation = (0.5, 1.5)
+        saturation = (0.1, 2.0)
 
     transform = K.augmentation.ColorJitter(saturation=saturation, same_on_batch=same_on_batch, p=1.0)
     images_out: torch.Tensor = transform(images)
