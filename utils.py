@@ -68,7 +68,7 @@ class S3Downloader:
         "s3",
         aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
         aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-        region_name=os.getenv("REGION_NAME")
+        region_name=os.getenv("REGION_NAME"),
     )
 
     @staticmethod
@@ -86,9 +86,13 @@ class S3Downloader:
     def read_image(uri: str) -> np.ndarray:
         try:
             bucket, file_name = S3Downloader.split_s3_path(uri)
-            s3_response_object = S3Downloader.s3.get_object(Bucket=bucket, Key=file_name)
+            s3_response_object = S3Downloader.s3.get_object(
+                Bucket=bucket, Key=file_name
+            )
 
-            array: np.ndarray = np.frombuffer(s3_response_object["Body"].read(), np.uint8)
+            array: np.ndarray = np.frombuffer(
+                s3_response_object["Body"].read(), np.uint8
+            )
             image = cv2.imdecode(array, cv2.IMREAD_COLOR)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             return image
@@ -111,16 +115,17 @@ def image_to_base64(image: np.ndarray) -> str:
     # convert image to bytes
     with BytesIO() as output_bytes:
         image: Image.Image = Image.fromarray(image)
-        image.save(output_bytes, 'PNG')  # Save to PNG to prevent loss information
+        image.save(output_bytes, "PNG")  # Save to PNG to prevent loss information
         image_bytes: bytes = output_bytes.getvalue()
 
     # encode bytes to base64 string
-    base64_string: str = str(base64.b64encode(image_bytes), 'utf-8')
+    base64_string: str = str(base64.b64encode(image_bytes), "utf-8")
     return base64_string
 
 
 def base64_to_image(base64_string: str) -> np.ndarray:
     import imageio
+
     # Decode base64 string to bytes
     image_bytes: bytes = base64.b64decode(base64_string)
     # Decode bytes to numpy image
@@ -134,10 +139,12 @@ def base64_to_image(base64_string: str) -> np.ndarray:
 
 def image_to_tensor(image: np.ndarray) -> torch.Tensor:
     image_tensor: torch.Tensor = K.image_to_tensor(image, keepdim=False)
-    image_tensor = image_tensor.float() / 255   # shape: [B, C, H, W]
+    image_tensor = image_tensor.float() / 255  # shape: [B, C, H, W]
     return image_tensor
 
 
 def tensor_to_image(image_tensor: torch.Tensor) -> np.ndarray:
-    image: np.ndarray = (K.tensor_to_image(image_tensor, keepdim=False) * 255).astype(np.uint8)
+    image: np.ndarray = (K.tensor_to_image(image_tensor, keepdim=False) * 255).astype(
+        np.uint8
+    )
     return image

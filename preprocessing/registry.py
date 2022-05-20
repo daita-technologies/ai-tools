@@ -24,4 +24,5 @@ def register_preprocessing(name: str):
     def wrapper(preprocessing_class):
         PREPROCESSING[name] = preprocessing_class
         return preprocessing_class
+
     return wrapper

@@ -13,10 +13,7 @@ from preprocessing.preprocessor import Preprocessor
     route_prefix="/preprocessing",
     num_replicas=1,
     max_concurrent_queries=100,
-    ray_actor_options={
-        "num_cpus": 1,
-        "num_gpus": 0
-    },
+    ray_actor_options={"num_cpus": 1, "num_gpus": 0},
 )
 class PreprocessingDeployment:
     def __init__(self, use_gpu: bool = False):
@@ -109,10 +106,7 @@ class PreprocessingDeployment:
             reference_paths_dict: Dict[str, str] = data["reference_images"]
 
             output_image_paths: List[str] = self.preprocessor.process(
-                input_image_paths,
-                output_dir,
-                preprocess_codes,
-                reference_paths_dict
+                input_image_paths, output_dir, preprocess_codes, reference_paths_dict
             )
             return {
                 "images_paths": output_image_paths,
@@ -120,20 +114,14 @@ class PreprocessingDeployment:
         except Exception:
             return JSONResponse(
                 status_code=500,
-                content={
-                    "images_paths": [],
-                    "error": traceback.format_exc()
-                }
+                content={"images_paths": [], "error": traceback.format_exc()},
             )
 
 
 if __name__ == "__main__":
     # Start Ray Serve backend
     ray.init(address="auto", namespace="serve")
-    serve.start(
-        detached=True,
-        http_options={"host": "0.0.0.0", "port": 8000}
-    )
+    serve.start(detached=True, http_options={"host": "0.0.0.0", "port": 8000})
 
     # Deploy
     PreprocessingDeployment.deploy(use_gpu=False)

@@ -19,9 +19,7 @@ from preprocessing.references import (
 )
 
 
-ENV_PATH: str = str(
-    Path(__file__).parent.parent.absolute() / ".env"
-)
+ENV_PATH: str = str(Path(__file__).parent.parent.absolute() / ".env")
 load_dotenv(ENV_PATH)
 
 
@@ -38,34 +36,33 @@ class Preprocessor:
         self.use_gpu: bool = use_gpu
         self.device: torch.device = Preprocessor.__init_device(use_gpu)
 
-    def get_reference_image_paths(self,
-                                  input_image_paths: List[str],
-                                  preprocess_codes: List[str],
-                                  ) -> Dict[str, str]:
+    def get_reference_image_paths(
+        self,
+        input_image_paths: List[str],
+        preprocess_codes: List[str],
+    ) -> Dict[str, str]:
         # Mapping from a preprocess_code to its corresponding reference image path
         reference_paths_dict: Dict[str, str] = {}
         # Read all input images beforehand
         input_images: List[str] = [
-            read_image(input_image_path)
-            for input_image_path in input_image_paths
+            read_image(input_image_path) for input_image_path in input_image_paths
         ]
         # Find reference image for each preprocessing code
         for code in preprocess_codes:
             preprocess_name: str = CodeToPreprocess[code]
             reference_paths_dict[code] = self.__find_reference_image_path(
-                input_images,
-                input_image_paths,
-                preprocess_name
+                input_images, input_image_paths, preprocess_name
             )
         return reference_paths_dict
 
-    def process(self,
-                input_image_paths: List[str],
-                output_dir: str,
-                preprocess_codes: List[str],
-                reference_paths_dict: Dict[str, str],
-                **kwargs
-                ) -> List[str]:
+    def process(
+        self,
+        input_image_paths: List[str],
+        output_dir: str,
+        preprocess_codes: List[str],
+        reference_paths_dict: Dict[str, str],
+        **kwargs,
+    ) -> List[str]:
 
         print("*" * 100)
 
@@ -104,7 +101,9 @@ class Preprocessor:
             # Find reference image
             print(f"[PREPROCESSING][pid {pid}] Finding reference image...")
             start = time.time()
-            reference_paths_dict: Dict[str, str] = self.get_reference_image_paths(input_image_paths, preprocess_codes)
+            reference_paths_dict: Dict[str, str] = self.get_reference_image_paths(
+                input_image_paths, preprocess_codes
+            )
             end = time.time()
             print(
                 f"[PREPROCESSING][pid {pid}] "
@@ -130,7 +129,7 @@ class Preprocessor:
                     input_image_path,
                     output_dir,
                     preprocess_codes,
-                    reference_images_dict
+                    reference_images_dict,
                 )
                 output_image_paths.append(output_image_path)
             # If there are some errors (input image not found, weird image...) then skip the image
@@ -145,12 +144,13 @@ class Preprocessor:
         )
         return output_image_paths
 
-    def __process_one_image(self,
-                            input_image_path: str,
-                            output_dir: str,
-                            preprocess_codes: List[str],
-                            reference_images_dict: Dict[str, np.ndarray]
-                            ) -> Optional[str]:
+    def __process_one_image(
+        self,
+        input_image_path: str,
+        output_dir: str,
+        preprocess_codes: List[str],
+        reference_images_dict: Dict[str, np.ndarray],
+    ) -> Optional[str]:
         """
         Apply preprocessing to input image given a reference image.
         Return saved output image path or None.
@@ -169,9 +169,7 @@ class Preprocessor:
                 preprocess_name: str = CodeToPreprocess[preprocess_code]
                 reference_image: np.ndarray = reference_images_dict[preprocess_code]
                 image, is_normalized = PREPROCESSING[preprocess_name]().process(
-                    image,
-                    reference_image,
-                    image_path=input_image_path
+                    image, reference_image, image_path=input_image_path
                 )
                 print(f"[PREPROCESSING][pid {pid}] {preprocess_name}:", is_normalized)
 
@@ -200,20 +198,28 @@ class Preprocessor:
         )
         return output_image_path
 
-
-    def __find_reference_image_path(self,
-                                    input_images: List[np.ndarray],
-                                    input_image_paths: List[str],
-                                    preprocess_name: str
-                                    ) -> str:
+    def __find_reference_image_path(
+        self,
+        input_images: List[np.ndarray],
+        input_image_paths: List[str],
+        preprocess_name: str,
+    ) -> str:
         if preprocess_name == "normalize_brightness":
-            reference_image_path: str = find_reference_brightness_image(input_images, input_image_paths)
+            reference_image_path: str = find_reference_brightness_image(
+                input_images, input_image_paths
+            )
         elif preprocess_name == "normalize_hue":
-            reference_image_path = find_reference_hue_image(input_images, input_image_paths)
+            reference_image_path = find_reference_hue_image(
+                input_images, input_image_paths
+            )
         elif preprocess_name == "normalize_saturation":
-            reference_image_path = find_reference_saturation_image(input_images, input_image_paths)
+            reference_image_path = find_reference_saturation_image(
+                input_images, input_image_paths
+            )
         else:
-            reference_image_path = find_reference_signal_to_noise_image(input_images, input_image_paths)
+            reference_image_path = find_reference_signal_to_noise_image(
+                input_images, input_image_paths
+            )
         return reference_image_path
 
     @staticmethod
@@ -233,8 +239,12 @@ class Preprocessor:
         pid = os.getpid()
         if use_gpu and torch.cuda.is_available():
             device: torch.device = torch.device("cuda:0")
-            print(f"[PREPROCESSING][pid {pid}] {use_gpu=} and cuda is available. Initialized {device}")
+            print(
+                f"[PREPROCESSING][pid {pid}] {use_gpu=} and cuda is available. Initialized {device}"
+            )
         else:
             device = torch.device("cpu")
-            print(f"[PREPROCESSING][pid {pid}] {use_gpu=} and cuda not found. Initialized {device}")
+            print(
+                f"[PREPROCESSING][pid {pid}] {use_gpu=} and cuda not found. Initialized {device}"
+            )
         return device

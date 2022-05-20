@@ -13,10 +13,7 @@ from augmentation.augmentor import Augmentor
     route_prefix="/augmentation",
     num_replicas=1,
     max_concurrent_queries=100,
-    ray_actor_options={
-        "num_cpus": 1,
-        "num_gpus": 0
-    },
+    ray_actor_options={"num_cpus": 1, "num_gpus": 0},
 )
 class AugmentationDeployment:
     def __init__(self, use_gpu: bool = False):
@@ -114,12 +111,9 @@ class AugmentationDeployment:
                 augment_codes,
                 num_augments_per_image,
                 parameters,
-                output_dir
+                output_dir,
             )
-            return {
-                "images_paths": output_image_paths,
-                "json_paths": output_json_paths
-            }
+            return {"images_paths": output_image_paths, "json_paths": output_json_paths}
 
         except Exception:
             return JSONResponse(status_code=500, content=traceback.format_exc())
@@ -128,10 +122,7 @@ class AugmentationDeployment:
 if __name__ == "__main__":
     # Start Ray Serve backend
     ray.init(address="auto", namespace="serve")
-    serve.start(
-        detached=True,
-        http_options={"host": "0.0.0.0", "port": 8000}
-    )
+    serve.start(detached=True, http_options={"host": "0.0.0.0", "port": 8000})
 
     # Deploy
     AugmentationDeployment.deploy(use_gpu=False)

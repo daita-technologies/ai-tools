@@ -8,12 +8,14 @@ from preprocessing.preprocessing_utils import (
     calculate_contrast_score,
     calculate_signal_to_noise,
     calculate_sharpness_score,
-    calculate_luminance
+    calculate_luminance,
 )
 
 
 @register_healthcheck(name="signal_to_noise")
-def check_signal_to_noise_RGB(image: np.ndarray, **kwargs) -> Tuple[float, float, float]:
+def check_signal_to_noise_RGB(
+    image: np.ndarray, **kwargs
+) -> Tuple[float, float, float]:
     R, G, B = np.split(image, axis=2)
     snr_R: float = calculate_signal_to_noise(R)
     snr_G: float = calculate_signal_to_noise(G)

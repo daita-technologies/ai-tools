@@ -5,7 +5,9 @@ from typing import Tuple
 
 class BasePreprocessing(ABC):
     @abstractmethod
-    def process(self, images: np.ndarray, reference_images: np.ndarray, **kwargs) -> Tuple[np.ndarray, bool]:
+    def process(
+        self, images: np.ndarray, reference_images: np.ndarray, **kwargs
+    ) -> Tuple[np.ndarray, bool]:
         """
         Normalize an RGB array image given a reference image.
 
