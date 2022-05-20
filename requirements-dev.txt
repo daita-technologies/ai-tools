@@ -1,3 +1,7 @@
+natsort
 flake8
+matplotlib
+python-rapidjson
+requests
 ipython
 ipykernel
