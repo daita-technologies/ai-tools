@@ -16,7 +16,7 @@ jobs:
         architecture: 
           - 'x64'
         python-version:
-          - 3.8
+          - '3.8'
 
     steps:
       - name: Checkout
@@ -30,4 +30,3 @@ jobs:
 
       - name: Check formatting with Black
         uses: psf/black@stable
-        run: black .
