@@ -30,3 +30,4 @@ jobs:
 
       - name: Check formatting with Black
         uses: psf/black@stable
+        run: python -m black --check .
