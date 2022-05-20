@@ -1,0 +1,12 @@
+# Ignore everything
+**
+# Allow heathcheck module
+!healthcheck/**
+# Allow augmentation module
+!augmentation/**
+# Allow preprocessing module
+!preprocessing/**
+# Allow requirements*
+!requirements*
+# Allow all Dockerfile
+!Dockerfile*

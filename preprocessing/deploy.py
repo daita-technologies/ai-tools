@@ -64,10 +64,7 @@ class PreprocessorDeployment:
 if __name__ == "__main__":
     # Start Ray Serve backend
     ray.init(address="auto", namespace="serve")
-    serve.start(
-        detached=True,
-        http_options={"host": "0.0.0.0", "port": 8000}
-    )
+    serve.start(detached=True, http_options={"host": "0.0.0.0", "port": 8000})
 
     # Deploy
     num_cpus: int = mp.cpu_count()
@@ -75,11 +72,8 @@ if __name__ == "__main__":
         route_prefix="/preprocessing",
         num_replicas=2,
         max_concurrent_queries=32,
-        ray_actor_options={
-            "num_cpus": num_cpus,
-            "num_gpus": 0
-        },
+        ray_actor_options={"num_cpus": num_cpus, "num_gpus": 0},
         init_kwargs={
             "use_gpu": False,
-        }
+        },
     ).deploy()

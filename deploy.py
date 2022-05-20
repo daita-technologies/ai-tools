@@ -105,15 +105,14 @@ class Deployment:
             if type_ not in ("augmentation", "preprocessing"):
                 return Response(
                     status_code=500,
-                    content=f"Field 'type' must be 'preprocessing' or 'augmentation'. Got type={type_}"
+                    content=f"Field 'type' must be 'preprocessing' or 'augmentation'. Got type={type_}",
                 )
 
             # Handle augmentations
             if type_ == "augmentation":
-                augment_codes: List[str] = list(filter(
-                    lambda code: "AUG" in code,
-                    codes
-                ))
+                augment_codes: List[str] = list(
+                    filter(lambda code: "AUG" in code, codes)
+                )
                 if "num_augments_per_image" not in data.keys():
                     raise KeyError(
                         f"Got {augment_codes=}. "
@@ -121,26 +120,20 @@ class Deployment:
                     )
                 num_augments_per_image: int = data["num_augments_per_image"]
                 output_image_paths, output_json_paths = self.augmentor.process(
-                    input_image_paths,
-                    augment_codes,
-                    num_augments_per_image,
-                    output_dir
+                    input_image_paths, augment_codes, num_augments_per_image, output_dir
                 )
                 return {
                     "images_paths": output_image_paths,
-                    "json_paths": output_json_paths
+                    "json_paths": output_json_paths,
                 }
 
             # Handle preprocessing
             elif type_ == "preprocessing":
-                preprocess_codes: List[str] = list(filter(
-                    lambda code: "PRE" in code,
-                    codes
-                ))
+                preprocess_codes: List[str] = list(
+                    filter(lambda code: "PRE" in code, codes)
+                )
                 output_image_paths = self.preprocessor.process(
-                    input_image_paths,
-                    output_dir,
-                    preprocess_codes
+                    input_image_paths, output_dir, preprocess_codes
                 )
                 return {
                     "images_paths": output_image_paths,
@@ -152,10 +145,7 @@ class Deployment:
 if __name__ == "__main__":
     # Start Ray Serve backend
     ray.init(address="auto", namespace="serve")
-    serve.start(
-        detached=True,
-        http_options={"host": "0.0.0.0", "port": 8000}
-    )
+    serve.start(detached=True, http_options={"host": "0.0.0.0", "port": 8000})
 
     # Deploy
     num_cpus: int = mp.cpu_count()
@@ -163,8 +153,5 @@ if __name__ == "__main__":
         route_prefix="/ai",
         num_replicas=1,
         max_concurrent_queries=32,
-        ray_actor_options={
-            "num_cpus": num_cpus,
-            "num_gpus": 0
-        },
+        ray_actor_options={"num_cpus": num_cpus, "num_gpus": 0},
     ).deploy(use_gpu=False)
