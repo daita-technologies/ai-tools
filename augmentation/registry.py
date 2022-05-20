@@ -27,7 +27,10 @@ CodeToAugment: Dict[str, str] = {
 def register_augmentation(name: str):
     def decorator(augmentation_function):
         AUGMENTATIONS[name] = augmentation_function
+
         def wrapper(*args, **kwargs):
             return augmentation_function(*args, **kwargs)
+
         return wrapper
+
     return decorator

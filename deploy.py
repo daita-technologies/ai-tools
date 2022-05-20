@@ -9,10 +9,7 @@ from preprocessing.deploy import PreprocessingDeployment
 if __name__ == "__main__":
     # Start Ray Serve backend
     ray.init(address="auto", namespace="serve")
-    serve.start(
-        detached=True,
-        http_options={"host": "0.0.0.0", "port": 8000}
-    )
+    serve.start(detached=True, http_options={"host": "0.0.0.0", "port": 8000})
 
     deploy_augmentation: bool = True
     deploy_preprocessing: bool = True
@@ -22,10 +19,7 @@ if __name__ == "__main__":
             route_prefix="/augmentation",
             num_replicas=1,
             max_concurrent_queries=100,
-            ray_actor_options={
-                "num_cpus": 1,
-                "num_gpus": 0
-            },
+            ray_actor_options={"num_cpus": 1, "num_gpus": 0},
         ).deploy(use_gpu=False)
 
     if deploy_preprocessing:
@@ -33,8 +27,5 @@ if __name__ == "__main__":
             route_prefix="/preprocessing",
             num_replicas=mp.cpu_count() - 1 if mp.cpu_count() > 1 else 1,
             max_concurrent_queries=100,
-            ray_actor_options={
-                "num_cpus": 1,
-                "num_gpus": 0
-            },
+            ray_actor_options={"num_cpus": 1, "num_gpus": 0},
         ).deploy(use_gpu=False)

@@ -17,9 +17,7 @@ from augmentation.registry import AUGMENTATIONS, CodeToAugment
 from utils import image_to_tensor, read_image, save_image, tensor_to_image
 
 
-ENV_PATH: str = str(
-    Path(__file__).parent.parent.absolute() / ".env"
-)
+ENV_PATH: str = str(Path(__file__).parent.parent.absolute() / ".env")
 load_dotenv(ENV_PATH)
 
 
@@ -36,13 +34,14 @@ class Augmentor:
         self.use_gpu: bool = use_gpu
         self.device: torch.device = self.__init_device(use_gpu)
 
-    def process(self,
-                input_image_paths: List[str],
-                augment_codes: List[str],
-                num_augments_per_image: int,
-                parameters: Dict[str, Dict[str, Any]],
-                output_dir: str,
-                ) -> Tuple[List[str], List[str]]:
+    def process(
+        self,
+        input_image_paths: List[str],
+        augment_codes: List[str],
+        num_augments_per_image: int,
+        parameters: Dict[str, Dict[str, Any]],
+        output_dir: str,
+    ) -> Tuple[List[str], List[str]]:
         """
         Apply augmentation on a list of images.
 
@@ -111,7 +110,9 @@ class Augmentor:
         print("*" * 100)
 
         pid = os.getpid()
-        print(f"[AUGMENTATION][pid {pid}] Found {len(input_image_paths)} images: {input_image_paths}")
+        print(
+            f"[AUGMENTATION][pid {pid}] Found {len(input_image_paths)} images: {input_image_paths}"
+        )
         start_augmenting = time.time()
 
         if len(augment_codes) > 0:
@@ -131,7 +132,7 @@ class Augmentor:
             augment_name,
             num_augments_per_image,
             parameters[augment_code],
-            output_dir
+            output_dir,
         )
 
         end_augmenting = time.time()
@@ -141,13 +142,14 @@ class Augmentor:
         )
         return output_image_paths, output_json_paths
 
-    def __process_batch(self,
-                        image_paths: List[str],
-                        augment_name: str,
-                        num_augments_per_image: int,
-                        parameters: Dict[str, Any],
-                        output_dir: str,
-                        ) -> Tuple[List[str], List[str]]:
+    def __process_batch(
+        self,
+        image_paths: List[str],
+        augment_name: str,
+        num_augments_per_image: int,
+        parameters: Dict[str, Any],
+        output_dir: str,
+    ) -> Tuple[List[str], List[str]]:
         """
         Generate list of augmented images from an image path.
 
@@ -195,7 +197,9 @@ class Augmentor:
         """
         pid = os.getpid()
 
-        original_sizes: List[Tuple[int, int]] = []  # original height and widths of images
+        original_sizes: List[
+            Tuple[int, int]
+        ] = []  # original height and widths of images
         images_tensor: List[torch.Tensor] = []
         for image_path in image_paths:
             start_read = time.time()
@@ -207,7 +211,9 @@ class Augmentor:
             original_sizes.append(image_tensor.shape[-2:])
 
             start_resize = time.time()
-            image_tensor: torch.Tensor = K.geometry.resize(image_tensor, size=(1024, 1024))
+            image_tensor: torch.Tensor = K.geometry.resize(
+                image_tensor, size=(1024, 1024)
+            )
             end_resize = time.time()
             images_tensor.append(image_tensor)
 
@@ -225,11 +231,15 @@ class Augmentor:
         output_image_paths: List[str] = []
         output_json_paths: List[str] = []
 
-        print(f"[AUGMENTATION][pid {pid}] Augmenting batch of {len(images_tensor)} images: {parameters=}")
+        print(
+            f"[AUGMENTATION][pid {pid}] Augmenting batch of {len(images_tensor)} images: {parameters=}"
+        )
         for _ in range(num_augments_per_image):
             # Augment a batch of images
             start = time.time()
-            images_tensor_out = AUGMENTATIONS[augment_name](images_tensor, parameters=parameters)
+            images_tensor_out = AUGMENTATIONS[augment_name](
+                images_tensor, parameters=parameters
+            )
             end = time.time()
             print(
                 f"[AUGMENTATION][pid {pid}] "
@@ -237,7 +247,9 @@ class Augmentor:
             )
 
             # Save generated images
-            for image_path, image_tensor, original_size in zip(image_paths, images_tensor_out, original_sizes):
+            for image_path, image_tensor, original_size in zip(
+                image_paths, images_tensor_out, original_sizes
+            ):
                 # Resize images back to original size, EXCEPT for super_resolution
                 if augment_name != "super_resolution":
                     height, width = original_size
@@ -252,7 +264,9 @@ class Augmentor:
                 start = time.time()
                 save_image(output_path, image)
                 end = time.time()
-                print(f"[AUGMENTATION][pid {pid}] Save image {output_path}: {round(end - start, 2)} seconds")
+                print(
+                    f"[AUGMENTATION][pid {pid}] Save image {output_path}: {round(end - start, 2)} seconds"
+                )
 
                 # Save corresponding output json
                 json_name: str = output_name + ".json"
@@ -303,8 +317,12 @@ class Augmentor:
         pid = os.getpid()
         if use_gpu and torch.cuda.is_available():
             device: torch.device = torch.device("cuda:0")
-            print(f"[AUGMENTATION][pid {pid}] {use_gpu=} and cuda is available. Initialized {device}")
+            print(
+                f"[AUGMENTATION][pid {pid}] {use_gpu=} and cuda is available. Initialized {device}"
+            )
         else:
             device = torch.device("cpu")
-            print(f"[AUGMENTATION][pid {pid}] {use_gpu=} and cuda not found. Initialized {device}")
+            print(
+                f"[AUGMENTATION][pid {pid}] {use_gpu=} and cuda not found. Initialized {device}"
+            )
         return device

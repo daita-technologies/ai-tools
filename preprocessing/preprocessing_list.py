@@ -15,7 +15,9 @@ class RotateExif(BasePreprocessing):
     def __init__(self):
         pass
 
-    def process(self, image: np.ndarray, reference_image: np.ndarray, **kwargs) -> Tuple[np.ndarray, bool]:
+    def process(
+        self, image: np.ndarray, reference_image: np.ndarray, **kwargs
+    ) -> Tuple[np.ndarray, bool]:
         """
         Rotate image according to metadata in EXIF.
 
@@ -81,7 +83,9 @@ class Grayscale(BasePreprocessing):
     def __init__(self):
         pass
 
-    def process(self, image: np.ndarray, reference_image: np.ndarray, **kwargs) -> Tuple[np.ndarray, bool]:
+    def process(
+        self, image: np.ndarray, reference_image: np.ndarray, **kwargs
+    ) -> Tuple[np.ndarray, bool]:
         """
         Normalize brightness of a tensor image given a reference image.
 
@@ -109,7 +113,9 @@ class NormalizeBrightness(BasePreprocessing):
     def __init__(self):
         pass
 
-    def process(self, image: np.ndarray, reference_image: np.ndarray, **kwargs) -> Tuple[np.ndarray, bool]:
+    def process(
+        self, image: np.ndarray, reference_image: np.ndarray, **kwargs
+    ) -> Tuple[np.ndarray, bool]:
         """
         Normalize brightness of a tensor image given a reference image.
 
@@ -137,7 +143,9 @@ class NormalizeBrightness(BasePreprocessing):
         brightness: float = image_hsv[:, :, 2].var()
 
         if abs(brightness - reference_brightness) / reference_brightness > 0.75:
-            matched_hsv = match_histograms(image_hsv, reference_image_hsv, multichannel=True)
+            matched_hsv = match_histograms(
+                image_hsv, reference_image_hsv, multichannel=True
+            )
             image_hsv[2] = matched_hsv[2]
             image_out = (hsv2rgb(image_hsv) * 255).astype(np.uint8)
             is_normalized = True
@@ -151,7 +159,9 @@ class NormalizeHue(BasePreprocessing):
     def __init__(self):
         pass
 
-    def process(self, image: np.ndarray, reference_image: np.ndarray, **kwargs) -> Tuple[np.ndarray, bool]:
+    def process(
+        self, image: np.ndarray, reference_image: np.ndarray, **kwargs
+    ) -> Tuple[np.ndarray, bool]:
         """
         Normalize hue of a tensor image given a reference image.
 
@@ -179,7 +189,9 @@ class NormalizeHue(BasePreprocessing):
         hue: float = image_hsv[:, :, 0].var()
 
         if abs(hue - reference_hue) / reference_hue > 0.75:
-            matched_hsv = match_histograms(image_hsv, reference_image_hsv, multichannel=True)
+            matched_hsv = match_histograms(
+                image_hsv, reference_image_hsv, multichannel=True
+            )
             image_hsv[0] = matched_hsv[0]
 
             image_out = (hsv2rgb(image_hsv) * 255).astype(np.uint8)
@@ -194,7 +206,9 @@ class NormalizeSaturation(BasePreprocessing):
     def __init__(self):
         pass
 
-    def process(self, image: np.ndarray, reference_image: np.ndarray, **kwargs) -> Tuple[np.ndarray, bool]:
+    def process(
+        self, image: np.ndarray, reference_image: np.ndarray, **kwargs
+    ) -> Tuple[np.ndarray, bool]:
         """
         Normalize hue of a tensor image given a reference image.
 
@@ -222,7 +236,9 @@ class NormalizeSaturation(BasePreprocessing):
         saturation: float = np.mean(image_hsv[:, :, 1])
 
         if abs(saturation - reference_saturation) / reference_saturation > 0.75:
-            matched_hsv = match_histograms(image_hsv, reference_image_hsv, multichannel=True)
+            matched_hsv = match_histograms(
+                image_hsv, reference_image_hsv, multichannel=True
+            )
             image_hsv[1] = matched_hsv[1]
 
             image_out = (hsv2rgb(image_hsv) * 255).astype(np.uint8)
@@ -237,7 +253,9 @@ class NormalizeSharpness(BasePreprocessing):
     def __init__(self):
         pass
 
-    def process(self, image: np.ndarray, reference_image: np.ndarray, **kwargs) -> Tuple[np.ndarray, bool]:
+    def process(
+        self, image: np.ndarray, reference_image: np.ndarray, **kwargs
+    ) -> Tuple[np.ndarray, bool]:
         """
         Normalize sharpness of a tensor image given a reference image.
 
@@ -272,7 +290,9 @@ class NormalizeContrast(BasePreprocessing):
     def __init__(self):
         pass
 
-    def process(self, image: np.ndarray, reference_image: np.ndarray, **kwargs) -> Tuple[np.ndarray, bool]:
+    def process(
+        self, image: np.ndarray, reference_image: np.ndarray, **kwargs
+    ) -> Tuple[np.ndarray, bool]:
         """
         Normalize contrast of a tensor image given a reference image.
 
@@ -307,7 +327,9 @@ class EqualizeHistogram(BasePreprocessing):
     def __init__(self):
         pass
 
-    def process(self, image: np.ndarray, reference_image: np.ndarray, **kwargs) -> Tuple[np.ndarray, bool]:
+    def process(
+        self, image: np.ndarray, reference_image: np.ndarray, **kwargs
+    ) -> Tuple[np.ndarray, bool]:
         """
         Normalize contrast of a tensor image given a reference image.
 
@@ -331,11 +353,7 @@ class EqualizeHistogram(BasePreprocessing):
         if is_low_contrast(image):
             H, W, C = image.shape
             image_out = np.stack(
-                [
-                    equalize_hist(image[:, :, channel])
-                    for channel in range(C)
-                ],
-                axis=-1
+                [equalize_hist(image[:, :, channel]) for channel in range(C)], axis=-1
             )
             image_out = (image_out * 255).astype(np.uint8)
             is_normalized = True
@@ -348,7 +366,9 @@ class IncreaseResolution(BasePreprocessing):
     def __init__(self):
         self.scale_factor = 2.0
 
-    def process(self, image: np.ndarray, reference_image: np.ndarray, **kwargs) -> Tuple[np.ndarray, bool]:
+    def process(
+        self, image: np.ndarray, reference_image: np.ndarray, **kwargs
+    ) -> Tuple[np.ndarray, bool]:
         """
         Increase resolution of a tensor image given a reference image.
 
