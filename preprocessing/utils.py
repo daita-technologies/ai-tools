@@ -77,7 +77,9 @@ class AdaptiveGammaCorrection:
         normalized tensor images of shape [C, H, W]
         """
         C, H, W = image.shape
-        YCrCb: torch.Tensor = K.color.rgb_to_ycbcr(image.unsqueeze(dim=0))[0]  # shape: [C, H, W]
+        YCrCb: torch.Tensor = K.color.rgb_to_ycbcr(image.unsqueeze(dim=0))[
+            0
+        ]  # shape: [C, H, W]
         YCrCb = (YCrCb * 255).type(torch.int32)
         Y = YCrCb[0, :, :]
 
@@ -85,7 +87,9 @@ class AdaptiveGammaCorrection:
         threshold: float = 0.3
         expected_global_avg_intensity: int = 112
         mean_intensity: float = torch.sum(Y / (H * W)).item()
-        t: float = (mean_intensity - expected_global_avg_intensity) / expected_global_avg_intensity
+        t: float = (
+            mean_intensity - expected_global_avg_intensity
+        ) / expected_global_avg_intensity
 
         if t <= threshold:
             result: torch.Tensor = AdaptiveGammaCorrection.__process_dimmed(Y)
@@ -100,7 +104,9 @@ class AdaptiveGammaCorrection:
     @staticmethod
     def __process_bright(image: torch.Tensor):
         img_negative = 255 - image
-        out = AdaptiveGammaCorrection.__correct_gamma(img_negative, a=0.25, truncated_cdf=False)
+        out = AdaptiveGammaCorrection.__correct_gamma(
+            img_negative, a=0.25, truncated_cdf=False
+        )
         out = 255 - out
         return out
 
@@ -110,11 +116,9 @@ class AdaptiveGammaCorrection:
         return out
 
     @staticmethod
-    def __correct_gamma(self,
-                        image: torch.Tensor,
-                        a: float = 0.25,
-                        truncated_cdf: bool = False
-                        ) -> torch.Tensor:
+    def __correct_gamma(
+        self, image: torch.Tensor, a: float = 0.25, truncated_cdf: bool = False
+    ) -> torch.Tensor:
         H, W = image.shape
         hist, bins = torch.histogram(image.ravel(), bins=256, range=(0, 256))
         proba_normalized = hist / hist.sum()
@@ -124,8 +128,8 @@ class AdaptiveGammaCorrection:
         proba_max = proba_normalized.max()
 
         pn_temp = (proba_normalized - proba_min) / (proba_max - proba_min)
-        pn_temp[pn_temp > 0] = proba_max * (pn_temp[pn_temp > 0]**a)
-        pn_temp[pn_temp < 0] = proba_max * (-((-pn_temp[pn_temp < 0])**a))
+        pn_temp[pn_temp > 0] = proba_max * (pn_temp[pn_temp > 0] ** a)
+        pn_temp[pn_temp < 0] = proba_max * (-((-pn_temp[pn_temp < 0]) ** a))
         prob_normalized_wd = pn_temp / pn_temp.sum()  # normalize to [0,1]
         cdf_prob_normalized_wd = prob_normalized_wd.cumsum()
 
@@ -136,5 +140,5 @@ class AdaptiveGammaCorrection:
 
         image_new = image.clone()
         for i in unique_intensity:
-            image_new[image == i] = torch.round(255 * (i / 255)**inverse_cdf[i])
+            image_new[image == i] = torch.round(255 * (i / 255) ** inverse_cdf[i])
         return image_new

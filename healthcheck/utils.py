@@ -49,7 +49,9 @@ class S3:
             bucket, file_name = S3.split_s3_path(uri)
             s3_response_object = S3.s3.get_object(Bucket=bucket, Key=file_name)
 
-            array: np.ndarray = np.frombuffer(s3_response_object["Body"].read(), np.uint8)
+            array: np.ndarray = np.frombuffer(
+                s3_response_object["Body"].read(), np.uint8
+            )
             image = cv2.imdecode(array, cv2.IMREAD_COLOR)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             return image

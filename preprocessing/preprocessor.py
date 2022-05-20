@@ -27,33 +27,42 @@ class Preprocessor:
         self.use_gpu: bool = use_gpu
         self.device: torch.device = Preprocessor.__init_device(use_gpu)
 
-    def process(self,
-                input_image_paths: List[str],
-                output_dir: str,
-                preprocess_codes: List[str],
-                **kwargs
-                ) -> List[str]:
+    def process(
+        self,
+        input_image_paths: List[str],
+        output_dir: str,
+        preprocess_codes: List[str],
+        **kwargs,
+    ) -> List[str]:
         print("*" * 100)
         print(f"Found {len(input_image_paths)} images.")
 
         # If preprocess codes are not given, run all preprocessing methods
         if len(preprocess_codes) == 0:
             preprocess_codes = list(CodeToPreprocess.keys())
-        print(f"Preprocess codes: { {code: CodeToPreprocess[code] for code in preprocess_codes} }")
+        print(
+            f"Preprocess codes: { {code: CodeToPreprocess[code] for code in preprocess_codes} }"
+        )
 
         # Find reference image
         print("Finding reference image...")
         start = time.time()
         reference_image_path: str = self.__find_reference_image(input_image_paths)
         end = time.time()
-        print(f"Found reference image {reference_image_path}: {round(end - start, 4)} seconds.")
+        print(
+            f"Found reference image {reference_image_path}: {round(end - start, 4)} seconds."
+        )
 
         reference_image: np.ndarray = read_image(reference_image_path)
         # Resize reference image for faster processeing
         reference_image = resize_image(reference_image, size=1024)
 
         # Multiprocessing pool
-        num_processes = len(input_image_paths) if len(input_image_paths) <= mp.cpu_count() else mp.cpu_count()
+        num_processes = (
+            len(input_image_paths)
+            if len(input_image_paths) <= mp.cpu_count()
+            else mp.cpu_count()
+        )
         pool = mp.Pool(num_processes)
 
         # Run process_one_image on each image in a separate process
@@ -61,24 +70,23 @@ class Preprocessor:
             self._process_one_image,
             reference_image=reference_image,
             output_dir=output_dir,
-            preprocess_codes=preprocess_codes
+            preprocess_codes=preprocess_codes,
         )
         output_image_paths: List[str] = pool.map(process_one_image, input_image_paths)
 
         # Remove error image paths
         output_image_paths = [
-            image_path
-            for image_path in output_image_paths
-            if image_path is not None
+            image_path for image_path in output_image_paths if image_path is not None
         ]
         return output_image_paths
 
-    def _process_one_image(self,
-                           input_image_path: str,
-                           reference_image: np.ndarray,
-                           output_dir: str,
-                           preprocess_codes: List[str],
-                           ) -> Optional[str]:
+    def _process_one_image(
+        self,
+        input_image_path: str,
+        reference_image: np.ndarray,
+        output_dir: str,
+        preprocess_codes: List[str],
+    ) -> Optional[str]:
         """
         Apply preprocessing to input image given a reference image.
         Return saved output image path or None.
@@ -97,9 +105,7 @@ class Preprocessor:
                     preprocess_name: str = CodeToPreprocess[preprocess_code]
                     print(f"[pid {pid}] {preprocess_name}:", end=" ")
                     image, is_normalized = PREPROCESSING[preprocess_name]().process(
-                        image,
-                        reference_image,
-                        image_path=input_image_path
+                        image, reference_image, image_path=input_image_path
                     )
                     print(is_normalized)
 
@@ -115,11 +121,15 @@ class Preprocessor:
 
             # Save output image
             image_name: str = os.path.basename(input_image_path)
-            output_image_path: str = os.path.join(output_dir, f"preprocessed_{image_name}")
+            output_image_path: str = os.path.join(
+                output_dir, f"preprocessed_{image_name}"
+            )
             start = time.time()
             save_image(output_image_path, image)
             end = time.time()
-            print(f"[pid {pid}] Save image {output_image_path}: {round(end - start, 2)} seconds")
+            print(
+                f"[pid {pid}] Save image {output_image_path}: {round(end - start, 2)} seconds"
+            )
             return output_image_path
 
         # If there are some errors (input image not found, weird image...) then return None
@@ -129,13 +139,11 @@ class Preprocessor:
 
     def __find_reference_image(self, input_image_paths: List[str]) -> str:
         images: List[np.ndarray] = [
-            read_image(image_path)
-            for image_path in input_image_paths
+            read_image(image_path) for image_path in input_image_paths
         ]
 
         signal_to_noise_ratios: List[float] = [
-            calculate_signal_to_noise(image)
-            for image in images
+            calculate_signal_to_noise(image) for image in images
         ]
 
         idxs_sorted: List[int] = sorted(

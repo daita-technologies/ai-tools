@@ -29,13 +29,14 @@ class Augmentor:
         self.use_gpu: bool = use_gpu
         self.device: torch.device = self.__init_device(use_gpu)
 
-    def process(self,
-                input_image_paths: List[str],
-                augment_codes: List[str],
-                num_augments_per_image: int,
-                output_dir: str,
-                **kwargs
-                ) -> Tuple[List[str], List[str]]:
+    def process(
+        self,
+        input_image_paths: List[str],
+        augment_codes: List[str],
+        num_augments_per_image: int,
+        output_dir: str,
+        **kwargs,
+    ) -> Tuple[List[str], List[str]]:
         """
         Apply augmentation on a list of images.
 
@@ -115,20 +116,25 @@ class Augmentor:
         output_json_paths: List[str] = []
         try:
             output_image_paths, output_json_paths = self.__process_batch(
-                input_image_paths, augment_name, num_augments_per_image, output_dir, **kwargs
+                input_image_paths,
+                augment_name,
+                num_augments_per_image,
+                output_dir,
+                **kwargs,
             )
         except Exception:
             print(f"Error: {traceback.format_exc()}")
 
         return output_image_paths, output_json_paths
 
-    def __process_batch(self,
-                        image_paths: List[str],
-                        augment_name: str,
-                        num_augments_per_image: int,
-                        output_dir: str,
-                        **kwargs
-                        ) -> Tuple[List[str], List[str]]:
+    def __process_batch(
+        self,
+        image_paths: List[str],
+        augment_name: str,
+        num_augments_per_image: int,
+        output_dir: str,
+        **kwargs,
+    ) -> Tuple[List[str], List[str]]:
         """
         Generate list of augmented images from an image path.
 
@@ -174,7 +180,9 @@ class Augmentor:
         ]
         ```
         """
-        original_sizes: List[Tuple[int, int]] = []  # original height and widths of images
+        original_sizes: List[
+            Tuple[int, int]
+        ] = []  # original height and widths of images
         images_tensor: List[torch.Tensor] = []
         for image_path in image_paths:
             start = time.time()
@@ -186,7 +194,9 @@ class Augmentor:
             image_tensor: torch.Tensor = image_to_tensor(image).to(self.device)
             original_sizes.append(image_tensor.shape[-2:])
             start = time.time()
-            image_tensor: torch.Tensor = K.geometry.resize(image_tensor, size=(1024, 1024))
+            image_tensor: torch.Tensor = K.geometry.resize(
+                image_tensor, size=(1024, 1024)
+            )
             end = time.time()
             print(f"Resize image: {round(end - start, 2)} seconds")
             images_tensor.append(image_tensor)
@@ -203,10 +213,14 @@ class Augmentor:
             start = time.time()
             images_tensor_out = AUGMENTATIONS[augment_name](images_tensor)
             end = time.time()
-            print(f"Generated {len(images_tensor)} images: {round(end - start, 2)} seconds")
+            print(
+                f"Generated {len(images_tensor)} images: {round(end - start, 2)} seconds"
+            )
 
             # Save generated images
-            for image_path, image_tensor, original_size in zip(image_paths, images_tensor_out, original_sizes):
+            for image_path, image_tensor, original_size in zip(
+                image_paths, images_tensor_out, original_sizes
+            ):
                 # Resize back to original size
                 height, width = original_size
                 image_tensor = K.geometry.resize(image_tensor, size=(height, width))
