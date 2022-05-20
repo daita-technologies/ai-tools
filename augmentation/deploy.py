@@ -119,15 +119,9 @@ class AugmentorDeployment:
             num_augments_per_image: int = data["num_augments_per_image"]
 
             output_image_paths, output_json_paths = self.augmentor.process(
-                input_image_paths,
-                augment_code,
-                num_augments_per_image,
-                output_dir
+                input_image_paths, augment_code, num_augments_per_image, output_dir
             )
-            return {
-                "images_paths": output_image_paths,
-                "json_paths": output_json_paths
-            }
+            return {"images_paths": output_image_paths, "json_paths": output_json_paths}
         except Exception:
             return Response(status_code=500, content=traceback.format_exc())
 
@@ -135,10 +129,7 @@ class AugmentorDeployment:
 if __name__ == "__main__":
     # Start Ray Serve backend
     ray.init(address="auto", namespace="serve")
-    serve.start(
-        detached=True,
-        http_options={"host": "0.0.0.0", "port": 8000}
-    )
+    serve.start(detached=True, http_options={"host": "0.0.0.0", "port": 8000})
 
     # Deploy
     num_cpus: int = mp.cpu_count()
@@ -146,11 +137,8 @@ if __name__ == "__main__":
         route_prefix="/augmentation",
         num_replicas=2,
         max_concurrent_queries=32,
-        ray_actor_options={
-            "num_cpus": num_cpus,
-            "num_gpus": 0
-        },
+        ray_actor_options={"num_cpus": num_cpus, "num_gpus": 0},
         init_kwargs={
             "use_gpu": False,
-        }
+        },
     ).deploy()

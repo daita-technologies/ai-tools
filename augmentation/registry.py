@@ -28,4 +28,5 @@ def register_augmentation(name: str):
     def wrapper(augmentation_class):
         AUGMENTATIONS[name] = augmentation_class
         return augmentation_class
+
     return wrapper
