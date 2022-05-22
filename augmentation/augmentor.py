@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import kornia as K
-from dotenv import load_dotenv
 
 import time
 import json
@@ -9,6 +8,7 @@ import uuid
 from pprint import pformat
 import random
 import os
+from copy import deepcopy
 from typing import Any, Dict, List, Optional, Tuple
 
 import augmentation.augmentations_list  # Import to register all augmentations
@@ -17,6 +17,8 @@ from utils import image_to_tensor, read_image, save_image, tensor_to_image
 
 
 class Augmentor:
+    SUPPORTED_EXTENSIONS: Tuple = (".png", ".jpg", ".jpeg")
+
     def __init__(self, use_gpu: bool = False):
         """
         Apply random augmentations on batch of images.
@@ -108,8 +110,18 @@ class Augmentor:
         print(
             f"[AUGMENTATION][pid {pid}] Found {len(input_image_paths)} images: {input_image_paths}"
         )
-        start_augmenting = time.time()
 
+        for image_path in deepcopy(input_image_paths):
+            _, extension = os.path.splitext(image_path)
+            if extension.lower() not in Augmentor.SUPPORTED_EXTENSIONS:
+                print(
+                    f"[AUGMENTATION][pid {pid}] [WARNING] Only support these extensions: {Augmentor.SUPPORTED_EXTENSIONS}. "
+                    f"But got {extension=} in image {image_path}."
+                    "Skip this image."
+                )
+                input_image_paths.remove(image_path)
+
+        start_augmenting = time.time()
         if len(augment_codes) > 0:
             self.__check_valid_augment_codes(augment_codes)
         else:
