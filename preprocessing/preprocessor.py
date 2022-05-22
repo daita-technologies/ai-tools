@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-from dotenv import load_dotenv
 
 import time
 import os
@@ -17,10 +16,6 @@ from preprocessing.references import (
     find_reference_saturation_image,
     find_reference_signal_to_noise_image,
 )
-
-
-ENV_PATH: str = str(Path(__file__).parent.parent.absolute() / ".env")
-load_dotenv(ENV_PATH)
 
 
 class Preprocessor:
