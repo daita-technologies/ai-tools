@@ -364,7 +364,7 @@ class EqualizeHistogram(BasePreprocessing):
 @register_preprocessing(name="high_resolution")
 class IncreaseResolution(BasePreprocessing):
     def __init__(self):
-        self.scale_factor = 2.0
+        pass
 
     def process(
         self, image: np.ndarray, reference_image: np.ndarray, **kwargs
@@ -385,11 +385,8 @@ class IncreaseResolution(BasePreprocessing):
         normalized tensor images of shape [B, C, H, W]
         """
         is_normalized: bool = False
-        H, W = image.shape[:2]
-
-        new_height = int(H * self.scale_factor)
-        new_width = int(W * self.scale_factor)
-        image_out: np.ndarray = resize_image(image, (new_height, new_width))
+        reference_height, reference_width = reference_image.shape[:2]
+        image_out: np.ndarray = resize_image(image, (reference_height, reference_width))
 
         if image_out.shape != image.shape:
             is_normalized = True

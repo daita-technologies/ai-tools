@@ -15,6 +15,7 @@ from preprocessing.references import (
     find_reference_hue_image,
     find_reference_saturation_image,
     find_reference_signal_to_noise_image,
+    find_reference_high_resolution_image
 )
 
 
@@ -32,26 +33,6 @@ class Preprocessor:
         """
         self.use_gpu: bool = use_gpu
         self.device: torch.device = Preprocessor.__init_device(use_gpu)
-
-    def get_reference_image_paths(
-        self,
-        input_image_paths: List[str],
-        preprocess_codes: List[str],
-    ) -> Dict[str, str]:
-
-        # Mapping from a preprocess_code to its corresponding reference image path
-        reference_paths_dict: Dict[str, str] = {}
-        # Read all input images beforehand
-        input_images: List[str] = [
-            read_image(input_image_path) for input_image_path in input_image_paths
-        ]
-        # Find reference image for each preprocessing code
-        for code in preprocess_codes:
-            preprocess_name: str = CodeToPreprocess[code]
-            reference_paths_dict[code] = self.__find_reference_image_path(
-                input_images, input_image_paths, preprocess_name
-            )
-        return reference_paths_dict
 
     def process(
         self,
@@ -81,13 +62,12 @@ class Preprocessor:
         start_preprocess = time.time()
 
         # In mode 'auto' (preprocess codes are not given):
-        # Run all preprocessing methods,
-        # except grayscale (PRE-001) and super-resolution (PRE-009)
+        # Run all preprocessing methods, except grayscale (PRE-001)
         if len(preprocess_codes) == 0:
             preprocess_codes = [
                 code
                 for code in CodeToPreprocess.keys()
-                if code not in ("PRE-001", "PRE-009")
+                if code != "PRE-001"
             ]
         else:
             # In mode 'expert' (some preprocess codes are given):
@@ -109,15 +89,9 @@ class Preprocessor:
         # find those reference images
         if len(reference_paths_dict.keys()) == 0:
             # Find reference image
-            print(f"[PREPROCESSING][pid {pid}] Finding reference image...")
-            start = time.time()
+            print(f"[PREPROCESSING][pid {pid}] Reference images are not given. Finding reference image...")
             reference_paths_dict: Dict[str, str] = self.get_reference_image_paths(
                 input_image_paths, preprocess_codes
-            )
-            end = time.time()
-            print(
-                f"[PREPROCESSING][pid {pid}] "
-                f"Found reference images {reference_paths_dict}: {round(end - start, 4)} seconds"
             )
         else:
             print(
@@ -153,6 +127,35 @@ class Preprocessor:
             f"{round(end_preprocess - start_preprocess, 4)} seconds"
         )
         return output_image_paths
+
+    def get_reference_image_paths(
+        self,
+        input_image_paths: List[str],
+        preprocess_codes: List[str],
+    ) -> Dict[str, str]:
+
+        pid: int = os.getpid()
+
+        # Mapping from a preprocess_code to its corresponding reference image path
+        reference_paths_dict: Dict[str, str] = {}
+        # Read all input images beforehand
+        input_images: List[str] = [
+            read_image(input_image_path) for input_image_path in input_image_paths
+        ]
+
+        # Find reference image for each preprocessing code
+        for code in preprocess_codes:
+            preprocess_name: str = CodeToPreprocess[code]
+            print(f"[PREPROCESSING][pid {pid}] Finding reference image of {code} ({preprocess_name}): ", end="")
+            start = time.time()
+            reference_image_path: str = self.__find_reference_image_path(
+                input_images, input_image_paths, preprocess_name
+            )
+            reference_paths_dict[code] = reference_image_path
+            end = time.time()
+            print(f"{reference_image_path} ({round(end - start, 4)} seconds)")
+
+        return reference_paths_dict
 
     def __process_one_image(
         self,
@@ -224,6 +227,10 @@ class Preprocessor:
             )
         elif preprocess_name == "normalize_saturation":
             reference_image_path = find_reference_saturation_image(
+                input_images, input_image_paths
+            )
+        elif preprocess_name == "high_resolution":
+            reference_image_path: str = find_reference_high_resolution_image(
                 input_images, input_image_paths
             )
         else:
