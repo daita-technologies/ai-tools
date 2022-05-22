@@ -3,9 +3,9 @@ import torch
 
 import time
 import os
-from pathlib import Path
+from copy import deepcopy
 import traceback
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Tuple
 
 import preprocessing.preprocessing_list  # Import to register all preprocessing
 from preprocessing.registry import PREPROCESSING, CodeToPreprocess
@@ -19,6 +19,8 @@ from preprocessing.references import (
 
 
 class Preprocessor:
+    SUPPORTED_EXTENSIONS: Tuple = (".png", ".jpg", ".jpeg")
+
     def __init__(self, use_gpu: bool = False):
         """
         Apply random augmentations on batch of images.
@@ -36,6 +38,7 @@ class Preprocessor:
         input_image_paths: List[str],
         preprocess_codes: List[str],
     ) -> Dict[str, str]:
+
         # Mapping from a preprocess_code to its corresponding reference image path
         reference_paths_dict: Dict[str, str] = {}
         # Read all input images beforehand
@@ -63,6 +66,18 @@ class Preprocessor:
 
         pid: int = os.getpid()
         print(f"[PREPROCESSING][pid {pid}] Found {len(input_image_paths)} images")
+
+        # Skip running for un-supported extensions
+        for image_path in deepcopy(input_image_paths):
+            _, extension = os.path.splitext(image_path)
+            if extension.lower() not in Preprocessor.SUPPORTED_EXTENSIONS:
+                print(
+                    f"[PREPROCESSING][pid {pid}] [WARNING] Only support these extensions: {Preprocessor.SUPPORTED_EXTENSIONS}. "
+                    f"But got {extension=} in image {image_path}."
+                    "Skip this image."
+                )
+                input_image_paths.remove(image_path)
+
         start_preprocess = time.time()
 
         # In mode 'auto' (preprocess codes are not given):

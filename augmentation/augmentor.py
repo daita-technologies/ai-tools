@@ -111,6 +111,7 @@ class Augmentor:
             f"[AUGMENTATION][pid {pid}] Found {len(input_image_paths)} images: {input_image_paths}"
         )
 
+        # Skip running for un-supported extensions
         for image_path in deepcopy(input_image_paths):
             _, extension = os.path.splitext(image_path)
             if extension.lower() not in Augmentor.SUPPORTED_EXTENSIONS:
