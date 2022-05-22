@@ -146,14 +146,14 @@ class Preprocessor:
         # Find reference image for each preprocessing code
         for code in preprocess_codes:
             preprocess_name: str = CodeToPreprocess[code]
-            print(f"[PREPROCESSING][pid {pid}] Finding reference image of {code} ({preprocess_name}): ", end="")
+            print(f"[PREPROCESSING][pid {pid}] Reference image of {code} ({preprocess_name}): ", end="")
             start = time.time()
             reference_image_path: str = self.__find_reference_image_path(
                 input_images, input_image_paths, preprocess_name
             )
             reference_paths_dict[code] = reference_image_path
             end = time.time()
-            print(f"{reference_image_path} ({round(end - start, 4)} seconds)")
+            print(f"{os.path.basename(reference_image_path)} ({round(end - start, 4)} seconds)")
 
         return reference_paths_dict
 

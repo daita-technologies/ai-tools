@@ -66,23 +66,37 @@ def find_reference_high_resolution_image(
     input_images: List[np.ndarray], input_image_paths: List[str]
 ) -> str:
 
+    heights: List[float] = [image.shape[0] for image in input_images]
+    widths: List[float] = [image.shape[1] for image in input_images]
     aspect_ratios: List[float] = [
-        image.shape[0] / image.shape[1]
-        for image in input_images
+        height / width
+        for height, width in zip(heights, widths)
     ]
 
     # Divide aspect ratios into multiple bins
-    bin_counts, bin_values = np.histogram(aspect_ratios, np.arange(start=0.1, stop=10, step=0.2))
-    # Find the bin that occurs most
-    most_common_bin_idx: int = np.argmax(bin_counts)
-
-    # Find the image'idx that has aspect ratio fall into most common bin
-    most_common_aspect_ratio_idx: int = [
-        idx
-        for idx, aspect_ratio in enumerate(aspect_ratios)
-        if bin_values[most_common_bin_idx] <= aspect_ratio <= bin_values[most_common_bin_idx + 1]
-    ][0]
-
-    # Reference image is the one that has median saturation
-    reference_image_path: str = input_image_paths[most_common_aspect_ratio_idx]
-    return reference_image_path
+    bins_count, bins_values = np.histogram(aspect_ratios, np.arange(start=0.1, stop=10, step=0.2))
+    # Find idx of the bin that occurs most
+    most_common_bin_idx: int = np.argmax(bins_count)
+    # Value of most-occur bin
+    most_common_bin_count: int = bins_count[most_common_bin_idx]
+    # If there is only 1 bin that occur most
+    if bins_count.tolist().count(most_common_bin_count) == 1:
+        most_common_aspect_ratio_idx: int = [
+            idx
+            for idx, aspect_ratio in enumerate(aspect_ratios)
+            if bins_values[most_common_bin_idx] <= aspect_ratio <= bins_values[most_common_bin_idx + 1]
+        ][0]
+        # Reference image is the one that has median saturation
+        reference_image_path: str = input_image_paths[most_common_aspect_ratio_idx]
+        return reference_image_path
+    # if there are multiple bin with the same count
+    else:
+        max_height: int = max(heights)
+        max_width: int = max(widths)
+        if max_height > max_width:
+            max_height_idx: int = np.argmax(heights)
+            reference_image_path: str = input_image_paths[max_height_idx]
+        else:
+            max_width_idx: int = np.argmax(widths)
+            reference_image_path: str = input_image_paths[max_width_idx]
+        return reference_image_path
