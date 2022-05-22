@@ -197,9 +197,11 @@ class Augmentor:
         ] = []  # original height and widths of images
         images_tensor: List[torch.Tensor] = []
         for image_path in image_paths:
+            print(f"[AUGMENTATION][pid {pid}] {image_path} | ", end="")
             start_read = time.time()
             image: np.ndarray = read_image(image_path)
             end_read = time.time()
+            print(f"Read image: {round(end_read - start_read, 2)} seconds | ", end="")
 
             # Resize tensor images for faster processeing
             image_tensor: torch.Tensor = image_to_tensor(image).to(self.device)
@@ -210,14 +212,9 @@ class Augmentor:
                 image_tensor, size=(1024, 1024)
             )
             end_resize = time.time()
-            images_tensor.append(image_tensor)
+            print(f"Resize image: {round(end_resize - start_resize, 2)} seconds")
 
-            print(
-                f"[AUGMENTATION][pid {pid}] "
-                f"{image_path} | "
-                f"Read image: {round(end_read - start_read, 2)} seconds | "
-                f"Resize image: {round(end_resize - start_resize, 2)} seconds"
-            )
+            images_tensor.append(image_tensor)
 
         # Stack multiple same images to form a batch
         # shape: [B, C, H, W]
@@ -245,6 +242,8 @@ class Augmentor:
             for image_path, image_tensor, original_size in zip(
                 image_paths, images_tensor_out, original_sizes
             ):
+                print(f"[AUGMENTATION][pid {pid}] {image_path} | ", end="")
+
                 # Resize images back to original size, EXCEPT for super_resolution
                 if augment_name != "super_resolution":
                     height, width = original_size
@@ -259,9 +258,7 @@ class Augmentor:
                 start = time.time()
                 save_image(output_path, image)
                 end = time.time()
-                print(
-                    f"[AUGMENTATION][pid {pid}] Save image {output_path}: {round(end - start, 2)} seconds"
-                )
+                print(f"Save image {output_path}: {round(end - start, 2)} seconds")
 
                 # Save corresponding output json
                 json_name: str = output_name + ".json"
