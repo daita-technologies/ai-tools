@@ -1,34 +1,21 @@
 import ray
 from ray import serve
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import JSONResponse
 
-import logging
-import sys
 import traceback
-import multiprocessing as mp
-from typing import List, Dict
+from typing import Any, List, Dict
 
 from augmentation.augmentor import Augmentor
-from utils import get_current_time
 
 
-CURRENT_TIME: str = get_current_time()
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(name)s %(levelname)s:  %(message)s",
-    datefmt="%y-%b-%d %H:%M:%S",
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler(
-            f"logs/augmentaions_{CURRENT_TIME}.txt", mode="w", encoding="utf-8"
-        ),
-    ],
+@serve.deployment(
+    route_prefix="/augmentation",
+    num_replicas=1,
+    max_concurrent_queries=100,
+    ray_actor_options={"num_cpus": 1, "num_gpus": 0},
 )
-logger = logging.getLogger(__file__)
-
-
-class AugmentorDeployment:
+class AugmentationDeployment:
     def __init__(self, use_gpu: bool = False):
         """
         Deploy and apply random augmentations on batch of images with Ray Serve.
@@ -43,7 +30,7 @@ class AugmentorDeployment:
 
     async def __call__(self, request: Request) -> List[Dict[str, object]]:
         """
-        Wrapper of `Augmentor.process` when called with HTTP request.
+        Wrapper of `Augmentor.process` and `Preprocessor.process` when called with HTTP request.
 
         Parameters:
         ----------
@@ -115,15 +102,21 @@ class AugmentorDeployment:
         try:
             input_image_paths: str = data["images_paths"]
             output_dir: str = data["output_folder"]
-            augment_code: str = data["augment_code"]
-            num_augments_per_image: int = data["num_augments_per_image"]
+            augment_codes: List[str] = data["codes"]
+            num_augments_per_image: int = data.get("num_augments_per_image", 1)
+            parameters: Dict[str, Dict[str, Any]] = data.get("parameters", {})
 
             output_image_paths, output_json_paths = self.augmentor.process(
-                input_image_paths, augment_code, num_augments_per_image, output_dir
+                input_image_paths,
+                augment_codes,
+                num_augments_per_image,
+                parameters,
+                output_dir,
             )
             return {"images_paths": output_image_paths, "json_paths": output_json_paths}
+
         except Exception:
-            return Response(status_code=500, content=traceback.format_exc())
+            return JSONResponse(status_code=500, content=traceback.format_exc())
 
 
 if __name__ == "__main__":
@@ -132,13 +125,4 @@ if __name__ == "__main__":
     serve.start(detached=True, http_options={"host": "0.0.0.0", "port": 8000})
 
     # Deploy
-    num_cpus: int = mp.cpu_count()
-    serve.deployment(AugmentorDeployment).options(
-        route_prefix="/augmentation",
-        num_replicas=2,
-        max_concurrent_queries=32,
-        ray_actor_options={"num_cpus": num_cpus, "num_gpus": 0},
-        init_kwargs={
-            "use_gpu": False,
-        },
-    ).deploy()
+    AugmentationDeployment.deploy(use_gpu=False)

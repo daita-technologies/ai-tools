@@ -4,7 +4,7 @@ from typing import Dict, Any, Tuple
 from utils import resize_image
 from preprocessing.base import BasePreprocessing
 from preprocessing.registry import register_preprocessing
-from preprocessing.utils import (
+from preprocessing.preprocessing_utils import (
     calculate_contrast_score,
     calculate_sharpness_score,
 )
@@ -104,7 +104,7 @@ class Grayscale(BasePreprocessing):
         from skimage.color import rgb2gray
 
         is_normalized: bool = True
-        image_out: np.ndarray = rgb2gray(image)
+        image_out: np.ndarray = (rgb2gray(image) * 255).astype(np.uint8)
         return image_out, is_normalized
 
 
@@ -136,11 +136,11 @@ class NormalizeBrightness(BasePreprocessing):
 
         is_normalized: bool = False
 
-        reference_image_hsv = rgb2hsv(reference_image)
-        reference_brightness: float = reference_image_hsv[2].var()
+        reference_image_hsv: np.ndarray = rgb2hsv(reference_image)
+        reference_brightness: float = reference_image_hsv[:, :, 2].var()
 
-        image_hsv = rgb2hsv(image)
-        brightness: float = image_hsv[2].var()
+        image_hsv: np.ndarray = rgb2hsv(image)
+        brightness: float = image_hsv[:, :, 2].var()
 
         if abs(brightness - reference_brightness) / reference_brightness > 0.75:
             matched_hsv = match_histograms(
@@ -182,11 +182,11 @@ class NormalizeHue(BasePreprocessing):
 
         is_normalized: bool = False
 
-        reference_image_hsv = rgb2hsv(reference_image)
-        reference_hue: float = reference_image_hsv[0].var()
+        reference_image_hsv: np.ndarray = rgb2hsv(reference_image)
+        reference_hue: float = reference_image_hsv[:, :, 0].var()
 
-        image_hsv = rgb2hsv(image)
-        hue: float = image_hsv[0].var()
+        image_hsv: np.ndarray = rgb2hsv(image)
+        hue: float = image_hsv[:, :, 0].var()
 
         if abs(hue - reference_hue) / reference_hue > 0.75:
             matched_hsv = match_histograms(
@@ -229,11 +229,11 @@ class NormalizeSaturation(BasePreprocessing):
 
         is_normalized: bool = False
 
-        reference_image_hsv = rgb2hsv(reference_image)
-        reference_saturation: float = np.mean(reference_image_hsv[1])
+        reference_image_hsv: np.ndarray = rgb2hsv(reference_image)
+        reference_saturation: float = np.mean(reference_image_hsv[:, :, 1])
 
-        image_hsv = rgb2hsv(image)
-        saturation: float = np.mean(image_hsv[1])
+        image_hsv: np.ndarray = rgb2hsv(image)
+        saturation: float = np.mean(image_hsv[:, :, 1])
 
         if abs(saturation - reference_saturation) / reference_saturation > 0.75:
             matched_hsv = match_histograms(
@@ -364,7 +364,7 @@ class EqualizeHistogram(BasePreprocessing):
 @register_preprocessing(name="high_resolution")
 class IncreaseResolution(BasePreprocessing):
     def __init__(self):
-        self.scale_factor = 2.0
+        pass
 
     def process(
         self, image: np.ndarray, reference_image: np.ndarray, **kwargs
@@ -385,11 +385,8 @@ class IncreaseResolution(BasePreprocessing):
         normalized tensor images of shape [B, C, H, W]
         """
         is_normalized: bool = False
-        H, W, _ = image.shape
-
-        new_height = int(H * self.scale_factor)
-        new_width = int(W * self.scale_factor)
-        image_out: np.ndarray = resize_image(image, (new_height, new_width))
+        reference_height, reference_width = reference_image.shape[:2]
+        image_out: np.ndarray = resize_image(image, (reference_height, reference_width))
 
         if image_out.shape != image.shape:
             is_normalized = True
