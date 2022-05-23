@@ -1,6 +1,5 @@
 import numpy as np
 from skimage.color import rgb2hsv
-from collections import Counter
 from typing import List
 
 from preprocessing.preprocessing_utils import (
