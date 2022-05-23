@@ -2,7 +2,7 @@ import torch
 import kornia as K
 
 import random
-from typing import Dict, Tuple, Any, Union
+from typing import Dict, Tuple, Union
 
 from augmentation.registry import register_augmentation
 
