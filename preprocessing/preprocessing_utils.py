@@ -2,7 +2,6 @@ import torch
 import numpy as np
 from skimage.color import rgb2ycbcr
 from skimage.color import rgb2lab
-import kornia as K
 import cv2
 from typing import List, Union
 
