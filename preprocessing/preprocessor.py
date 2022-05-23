@@ -15,7 +15,7 @@ from preprocessing.references import (
     find_reference_hue_image,
     find_reference_saturation_image,
     find_reference_signal_to_noise_image,
-    find_reference_high_resolution_image
+    find_reference_high_resolution_image,
 )
 
 
@@ -65,9 +65,7 @@ class Preprocessor:
         # Run all preprocessing methods, except grayscale (PRE-001)
         if len(preprocess_codes) == 0:
             preprocess_codes = [
-                code
-                for code in CodeToPreprocess.keys()
-                if code != "PRE-001"
+                code for code in CodeToPreprocess.keys() if code != "PRE-001"
             ]
         else:
             # In mode 'expert' (some preprocess codes are given):
@@ -89,7 +87,9 @@ class Preprocessor:
         # find those reference images
         if len(reference_paths_dict.keys()) == 0:
             # Find reference image
-            print(f"[PREPROCESSING][pid {pid}] Reference images are not given. Finding reference image...")
+            print(
+                f"[PREPROCESSING][pid {pid}] Reference images are not given. Finding reference image..."
+            )
             reference_paths_dict: Dict[str, str] = self.get_reference_image_paths(
                 input_image_paths, preprocess_codes
             )
@@ -146,14 +146,19 @@ class Preprocessor:
         # Find reference image for each preprocessing code
         for code in preprocess_codes:
             preprocess_name: str = CodeToPreprocess[code]
-            print(f"[PREPROCESSING][pid {pid}] Reference image of {code} ({preprocess_name}): ", end="")
+            print(
+                f"[PREPROCESSING][pid {pid}] Reference image of {code} ({preprocess_name}): ",
+                end="",
+            )
             start = time.time()
             reference_image_path: str = self.__find_reference_image_path(
                 input_images, input_image_paths, preprocess_name
             )
             reference_paths_dict[code] = reference_image_path
             end = time.time()
-            print(f"{os.path.basename(reference_image_path)} ({round(end - start, 4)} seconds)")
+            print(
+                f"{os.path.basename(reference_image_path)} ({round(end - start, 4)} seconds)"
+            )
 
         return reference_paths_dict
 
