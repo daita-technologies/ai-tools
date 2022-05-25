@@ -139,9 +139,17 @@ class Preprocessor:
         # Mapping from a preprocess_code to its corresponding reference image path
         reference_paths_dict: Dict[str, str] = {}
         # Read all input images beforehand
-        input_images: List[str] = [
-            read_image(input_image_path) for input_image_path in input_image_paths
-        ]
+
+        input_images: List[np.ndarray] = []
+        for input_image_path in input_image_paths:
+            try:
+                image: np.ndarray = read_image(input_image_path)
+                input_images.append(image)
+            except Exception:
+                print(
+                    f"[PREPROCESSING][pid {pid}] Error reading {input_image_path}: {traceback.format_exc()}. "
+                    f"Skip this image."
+                )
 
         # Find reference image for each preprocessing code
         for code in preprocess_codes:
@@ -177,7 +185,14 @@ class Preprocessor:
         print(f"[PREPROCESSING][pid {pid}] Preprocessing {input_image_path}")
         start = time.time()
 
-        image: np.ndarray = read_image(input_image_path)
+        try:
+            image: np.ndarray = read_image(input_image_path)
+        except Exception:
+            print(
+                f"[PREPROCESSING][pid {pid}] Error reading {input_image_path}: {traceback.format_exc()}"
+            )
+            raise
+
         H, W, _ = image.shape
         # Resize images for faster processeing
         image = resize_image(image, size=1024)
