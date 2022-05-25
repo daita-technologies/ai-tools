@@ -147,7 +147,7 @@ class Preprocessor:
                 input_images.append(image)
             except Exception:
                 print(
-                    f"[PREPROCESSING][pid {pid}] Error reading {input_image_path}: {traceback.format_exc()}\n"
+                    f"[PREPROCESSING][pid {pid}] Error reading {input_image_path}: {traceback.format_exc()}. "
                     f"Skip this image."
                 )
 
