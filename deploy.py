@@ -18,14 +18,14 @@ if __name__ == "__main__":
         AugmentationDeployment.options(
             route_prefix="/augmentation",
             num_replicas=1,
-            max_concurrent_queries=100,
-            ray_actor_options={"num_cpus": 1, "num_gpus": 0},
+            max_concurrent_queries=1000,
+            ray_actor_options={"num_cpus": 1 if mp.cpu_count() > 2 else 0.5, "num_gpus": 0},
         ).deploy(use_gpu=False)
 
     if deploy_preprocessing:
         PreprocessingDeployment.options(
             route_prefix="/preprocessing",
-            num_replicas=mp.cpu_count() - 1 if mp.cpu_count() > 1 else 1,
-            max_concurrent_queries=100,
-            ray_actor_options={"num_cpus": 1, "num_gpus": 0},
+            num_replicas=mp.cpu_count() - 2 if mp.cpu_count() > 2 else 1,
+            max_concurrent_queries=1000,
+            ray_actor_options={"num_cpus": 1 if mp.cpu_count() > 2 else 0.5, "num_gpus": 0},
         ).deploy(use_gpu=False)
