@@ -15,7 +15,7 @@ if __name__ == "__main__":
     deploy_preprocessing: bool = True
 
     # If the instance has only 1 CPU core, augmentation and preprocessing each
-    # use half of the CPU, i.e. 0.5. If the instance has more than 2 cores,
+    # use half of the CPU, i.e. 0.5. If the instance has more than 2 CPU cores,
     # augmentation uses 1 CPU core, the operating system uses 1 CPU core,
     # and the rest is used for preprocessing.
     if deploy_augmentation:
