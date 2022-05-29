@@ -505,7 +505,7 @@ def random_contrast(
     transformed tensor images of shape [B, C, H, W]
     """
     contrast: Union[Tuple[float, float], float, int] = kwargs.get("parameters", {}).get(
-        "constrast"
+        "contrast"
     )
     if contrast is not None:
         if isinstance(contrast, (float, int)):
