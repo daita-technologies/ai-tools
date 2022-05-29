@@ -19,7 +19,10 @@ if __name__ == "__main__":
             route_prefix="/augmentation",
             num_replicas=1,
             max_concurrent_queries=1000,
-            ray_actor_options={"num_cpus": 1 if mp.cpu_count() > 2 else 0.5, "num_gpus": 0},
+            ray_actor_options={
+                "num_cpus": 1 if mp.cpu_count() > 2 else 0.5,
+                "num_gpus": 0,
+            },
         ).deploy(use_gpu=False)
 
     if deploy_preprocessing:
@@ -27,5 +30,8 @@ if __name__ == "__main__":
             route_prefix="/preprocessing",
             num_replicas=mp.cpu_count() - 2 if mp.cpu_count() > 2 else 1,
             max_concurrent_queries=1000,
-            ray_actor_options={"num_cpus": 1 if mp.cpu_count() > 2 else 0.5, "num_gpus": 0},
+            ray_actor_options={
+                "num_cpus": 1 if mp.cpu_count() > 2 else 0.5,
+                "num_gpus": 0,
+            },
         ).deploy(use_gpu=False)
