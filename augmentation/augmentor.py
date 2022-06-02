@@ -9,7 +9,7 @@ from pprint import pformat
 import random
 import os
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Union, Optional, Tuple
 
 import augmentation.augmentations_list  # Import to register all augmentations
 from augmentation.registry import AUGMENTATIONS, CodeToAugment
@@ -208,7 +208,8 @@ class Augmentor:
         original_sizes: List[
             Tuple[int, int]
         ] = []  # original height and widths of images
-        images_tensor: List[torch.Tensor] = []
+
+        images_tensor: Union[torch.Tensor, List[torch.Tensor]] = []
         for image_path in image_paths:
             print(f"[AUGMENTATION][pid {pid}] {image_path} | ", end="")
             start_read = time.time()
@@ -216,22 +217,25 @@ class Augmentor:
             end_read = time.time()
             print(f"Read image: {round(end_read - start_read, 2)} seconds | ", end="")
 
-            # Resize tensor images for faster processeing
             image_tensor: torch.Tensor = image_to_tensor(image).to(self.device)
-            original_sizes.append(image_tensor.shape[-2:])
 
-            start_resize = time.time()
-            image_tensor: torch.Tensor = K.geometry.resize(
-                image_tensor, size=(1024, 1024)
-            )
-            end_resize = time.time()
-            print(f"Resize image: {round(end_resize - start_resize, 2)} seconds")
+            # Resize tensor images for faster processing,
+            # except for super_resolution, where we keep the original size
+            original_sizes.append(image_tensor.shape[-2:])
+            if augment_name != "super_resolution":
+                start_resize = time.time()
+                image_tensor: torch.Tensor = K.geometry.resize(
+                    image_tensor, size=(1024, 1024)
+                )
+                end_resize = time.time()
+                print(f"[AUGMENTATION][pid {pid}] Resize image: {round(end_resize - start_resize, 2)} seconds")
 
             images_tensor.append(image_tensor)
 
         # Stack multiple same images to form a batch
         # shape: [B, C, H, W]
-        images_tensor: torch.Tensor = torch.cat(images_tensor, dim=0)
+        if augment_name != "super_resolution":
+            images_tensor: torch.Tensor = torch.cat(images_tensor, dim=0)
 
         output_image_paths: List[str] = []
         output_json_paths: List[str] = []

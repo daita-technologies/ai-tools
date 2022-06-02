@@ -2,7 +2,7 @@ import torch
 import kornia as K
 
 import random
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, List
 
 from augmentation.registry import register_augmentation
 
@@ -590,7 +590,7 @@ def random_posterize(
 
 
 @register_augmentation(name="super_resolution")
-def super_resolution(images: torch.Tensor, **kwargs) -> torch.Tensor:
+def super_resolution(images: List[torch.Tensor], **kwargs) -> torch.Tensor:
     """
     Increase resolution of images randomly
 
@@ -612,13 +612,20 @@ def super_resolution(images: torch.Tensor, **kwargs) -> torch.Tensor:
             factor = (factor, factor)
     else:
         factor = (0.25, 4.0)
-
     factor: float = random.uniform(factor[0], factor[1])
-    B, C, H, W = images.shape
-    new_height: int = round(H * factor)
-    new_width: int = round(W * factor)
 
-    images_out: torch.Tensor = K.geometry.resize(
-        images, (new_height, new_width), "bilinear"
-    )
+    images_out: List[torch.Tensor] = []
+    for image_tensor in images:
+        if image_tensor.ndim == 3:
+            image_tensor = image_tensor.unsqueeze(dim=0)
+
+        H, W = image_tensor.shape[-2:]
+        new_height: int = round(H * factor)
+        new_width: int = round(W * factor)
+
+        image_tensor_out: torch.Tensor = K.geometry.resize(
+            image_tensor, (new_height, new_width), "bilinear"
+        )
+        images_out.append(image_tensor_out)
+
     return images_out
