@@ -228,7 +228,9 @@ class Augmentor:
                     image_tensor, size=(1024, 1024)
                 )
                 end_resize = time.time()
-                print(f"[AUGMENTATION][pid {pid}] Resize image: {round(end_resize - start_resize, 2)} seconds")
+                print(
+                    f"[AUGMENTATION][pid {pid}] Resize image: {round(end_resize - start_resize, 2)} seconds"
+                )
 
             images_tensor.append(image_tensor)
 
