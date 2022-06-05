@@ -106,7 +106,11 @@ class AugmentationDeployment:
             num_augments_per_image: int = data.get("num_augments_per_image", 1)
             parameters: Dict[str, Dict[str, Any]] = data.get("parameters", {})
 
-            output_image_paths, output_json_paths, output_augment_codes = self.augmentor.process(
+            (
+                output_image_paths,
+                output_json_paths,
+                output_augment_codes,
+            ) = self.augmentor.process(
                 input_image_paths,
                 augment_codes,
                 num_augments_per_image,
@@ -116,7 +120,7 @@ class AugmentationDeployment:
             return {
                 "images_paths": output_image_paths,
                 "json_paths": output_json_paths,
-                "augment_codes": output_augment_codes
+                "augment_codes": output_augment_codes,
             }
 
         except Exception:
