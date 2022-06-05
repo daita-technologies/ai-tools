@@ -148,7 +148,7 @@ class Augmentor:
             f"[AUGMENTATION][pid {pid}] Done augmenting {len(input_image_paths)} images: "
             f"{round(end_augmenting - start_augmenting, 4)} seconds"
         )
-        return output_image_paths, output_json_paths
+        return output_image_paths, output_json_paths, [augment_code]
 
     def __process_batch(
         self,
