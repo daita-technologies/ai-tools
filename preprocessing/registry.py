@@ -4,7 +4,7 @@ from .base import BasePreprocessing
 
 PREPROCESSING: Dict[str, BasePreprocessing] = {}
 CodeToPreprocess: Dict[str, str] = {
-    "PRE-000": "auto_orientation",
+    "PRE-000": "rotate_exif",
     "PRE-001": "grayscale",
     "PRE-002": "normalize_brightness",
     "PRE-003": "normalize_hue",

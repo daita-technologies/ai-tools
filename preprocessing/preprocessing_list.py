@@ -10,7 +10,7 @@ from preprocessing.preprocessing_utils import (
 )
 
 
-@register_preprocessing(name="auto_orientation")
+@register_preprocessing(name="rotate_exif")
 class RotateExif(BasePreprocessing):
     def __init__(self):
         pass
