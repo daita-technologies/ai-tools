@@ -6,10 +6,10 @@ import time
 import json
 import uuid
 from pprint import pformat
-import traceback
 import random
 import os
-from typing import List, Optional, Tuple
+from copy import deepcopy
+from typing import Any, Dict, List, Union, Optional, Tuple
 
 import augmentation.augmentations_list  # Import to register all augmentations
 from augmentation.registry import AUGMENTATIONS, CodeToAugment
@@ -17,6 +17,8 @@ from utils import image_to_tensor, read_image, save_image, tensor_to_image
 
 
 class Augmentor:
+    SUPPORTED_EXTENSIONS: Tuple = (".png", ".jpg", ".jpeg")
+
     def __init__(self, use_gpu: bool = False):
         """
         Apply random augmentations on batch of images.
@@ -29,13 +31,14 @@ class Augmentor:
         self.use_gpu: bool = use_gpu
         self.device: torch.device = self.__init_device(use_gpu)
 
-    def process(self,
-                input_image_paths: List[str],
-                augment_codes: List[str],
-                num_augments_per_image: int,
-                output_dir: str,
-                **kwargs
-                ) -> Tuple[List[str], List[str]]:
+    def process(
+        self,
+        input_image_paths: List[str],
+        augment_codes: List[str],
+        num_augments_per_image: int,
+        parameters: Dict[str, Dict[str, Any]],
+        output_dir: str,
+    ) -> Tuple[List[str], List[str]]:
         """
         Apply augmentation on a list of images.
 
@@ -101,34 +104,60 @@ class Augmentor:
         ]
         ```
         """
+        print("*" * 100)
+
+        pid = os.getpid()
+        print(
+            f"[AUGMENTATION][pid {pid}] Found {len(input_image_paths)} images: {input_image_paths}"
+        )
+
+        # Skip running for un-supported extensions
+        for image_path in deepcopy(input_image_paths):
+            _, extension = os.path.splitext(image_path)
+            if extension.lower() not in Augmentor.SUPPORTED_EXTENSIONS:
+                print(
+                    f"[AUGMENTATION][pid {pid}] [WARNING] Only support these extensions: {Augmentor.SUPPORTED_EXTENSIONS}. "
+                    f"But got {extension=} in image {image_path}."
+                    "Skip this image."
+                )
+                input_image_paths.remove(image_path)
+
+        start_augmenting = time.time()
         if len(augment_codes) > 0:
             self.__check_valid_augment_codes(augment_codes)
         else:
             augment_codes: List[str] = list(CodeToAugment.keys())
+        print(
+            f"[AUGMENTATION][pid {pid}] "
+            f"{ {augment_code: CodeToAugment[augment_code] for augment_code in augment_codes} }"
+        )
 
         augment_code: str = random.choice(augment_codes)
         augment_name: str = CodeToAugment[augment_code]
-        print(f"{augment_code}: {augment_name}")
 
-        print(f"Found {len(input_image_paths)} images.")
-        output_image_paths: List[str] = []
-        output_json_paths: List[str] = []
-        try:
-            output_image_paths, output_json_paths = self.__process_batch(
-                input_image_paths, augment_name, num_augments_per_image, output_dir, **kwargs
-            )
-        except Exception:
-            print(f"Error: {traceback.format_exc()}")
+        output_image_paths, output_json_paths = self.__process_batch(
+            input_image_paths,
+            augment_name,
+            num_augments_per_image,
+            parameters.get(augment_code, {}),
+            output_dir,
+        )
 
-        return output_image_paths, output_json_paths
+        end_augmenting = time.time()
+        print(
+            f"[AUGMENTATION][pid {pid}] Done augmenting {len(input_image_paths)} images: "
+            f"{round(end_augmenting - start_augmenting, 4)} seconds"
+        )
+        return output_image_paths, output_json_paths, [augment_code]
 
-    def __process_batch(self,
-                        image_paths: List[str],
-                        augment_name: str,
-                        num_augments_per_image: int,
-                        output_dir: str,
-                        **kwargs
-                        ) -> Tuple[List[str], List[str]]:
+    def __process_batch(
+        self,
+        image_paths: List[str],
+        augment_name: str,
+        num_augments_per_image: int,
+        parameters: Dict[str, Any],
+        output_dir: str,
+    ) -> Tuple[List[str], List[str]]:
         """
         Generate list of augmented images from an image path.
 
@@ -174,42 +203,70 @@ class Augmentor:
         ]
         ```
         """
-        original_sizes: List[Tuple[int, int]] = []  # original height and widths of images
-        images_tensor: List[torch.Tensor] = []
-        for image_path in image_paths:
-            start = time.time()
-            image: np.ndarray = read_image(image_path)
-            end = time.time()
-            print(f"Read image {image_path}: {round(end - start, 2)} seconds")
+        pid = os.getpid()
 
-            # Resize tensor images for faster processeing
+        original_sizes: List[
+            Tuple[int, int]
+        ] = []  # original height and widths of images
+
+        images_tensor: Union[torch.Tensor, List[torch.Tensor]] = []
+        for image_path in image_paths:
+            print(f"[AUGMENTATION][pid {pid}] {image_path} | ", end="")
+            start_read = time.time()
+            image: np.ndarray = read_image(image_path)
+            end_read = time.time()
+            print(f"Read image: {round(end_read - start_read, 2)} seconds | ", end="")
+
             image_tensor: torch.Tensor = image_to_tensor(image).to(self.device)
+
+            # Resize tensor images for faster processing,
+            # except for super_resolution, where we keep the original size
             original_sizes.append(image_tensor.shape[-2:])
-            start = time.time()
-            image_tensor: torch.Tensor = K.geometry.resize(image_tensor, size=(1024, 1024))
-            end = time.time()
-            print(f"Resize image: {round(end - start, 2)} seconds")
+            if augment_name != "super_resolution":
+                start_resize = time.time()
+                image_tensor: torch.Tensor = K.geometry.resize(
+                    image_tensor, size=(1024, 1024)
+                )
+                end_resize = time.time()
+                print(
+                    f"[AUGMENTATION][pid {pid}] Resize image: {round(end_resize - start_resize, 2)} seconds"
+                )
+
             images_tensor.append(image_tensor)
 
         # Stack multiple same images to form a batch
         # shape: [B, C, H, W]
-        images_tensor: torch.Tensor = torch.cat(images_tensor, dim=0)
+        if augment_name != "super_resolution":
+            images_tensor: torch.Tensor = torch.cat(images_tensor, dim=0)
 
         output_image_paths: List[str] = []
         output_json_paths: List[str] = []
 
-        # Augment batch
+        print(
+            f"[AUGMENTATION][pid {pid}] Augmenting batch of {len(images_tensor)} images: {parameters=}"
+        )
         for _ in range(num_augments_per_image):
+            # Augment a batch of images
             start = time.time()
-            images_tensor_out = AUGMENTATIONS[augment_name](images_tensor)
+            images_tensor_out = AUGMENTATIONS[augment_name](
+                images_tensor, parameters=parameters
+            )
             end = time.time()
-            print(f"Generated {len(images_tensor)} images: {round(end - start, 2)} seconds")
+            print(
+                f"[AUGMENTATION][pid {pid}] "
+                f"{augment_name=}: {round(end - start, 2)} seconds"
+            )
 
             # Save generated images
-            for image_path, image_tensor, original_size in zip(image_paths, images_tensor_out, original_sizes):
-                # Resize back to original size
-                height, width = original_size
-                image_tensor = K.geometry.resize(image_tensor, size=(height, width))
+            for image_path, image_tensor, original_size in zip(
+                image_paths, images_tensor_out, original_sizes
+            ):
+                print(f"[AUGMENTATION][pid {pid}] {image_path} | ", end="")
+
+                # Resize images back to original size, EXCEPT for super_resolution
+                if augment_name != "super_resolution":
+                    height, width = original_size
+                    image_tensor = K.geometry.resize(image_tensor, size=(height, width))
                 image: np.ndarray = tensor_to_image(image_tensor)
 
                 name_without_ext, ext = os.path.splitext(os.path.basename(image_path))
@@ -231,15 +288,23 @@ class Augmentor:
 
             assert len(output_image_paths) == len(output_json_paths)
 
-        print("*" * 100)
         return output_image_paths, output_json_paths
 
     def __check_valid_augment_codes(self, augment_codes: List[str]) -> Optional[bool]:
+        pid = os.getpid()
+
+        # Map from an augment code to its augment name
+        supported_augment_codes: Dict[str, str] = {
+            augment_code: augment_name
+            for augment_code, augment_name in CodeToAugment.items()
+            if augment_name in AUGMENTATIONS.keys()
+        }
+
         for augment_code in augment_codes:
-            augment_name: str = CodeToAugment[augment_code]
-            if augment_name not in AUGMENTATIONS.keys():
+            if augment_code not in supported_augment_codes.keys():
                 message: str = (
-                    f"Only support these of augmentations: {pformat(CodeToAugment)}. "
+                    f"[AUGMENTATION][pid {pid}] "
+                    f"Only support these of augmentations: {pformat(supported_augment_codes)}. "
                     f"Got {augment_code=}!"
                 )
                 print(message)
@@ -260,10 +325,15 @@ class Augmentor:
         -------
         "cpu" or "cuda" device
         """
+        pid = os.getpid()
         if use_gpu and torch.cuda.is_available():
             device: torch.device = torch.device("cuda:0")
-            print(f"{use_gpu=} and cuda is available. Initialized {device}")
+            print(
+                f"[AUGMENTATION][pid {pid}] {use_gpu=} and cuda is available. Initialized {device}"
+            )
         else:
             device = torch.device("cpu")
-            print(f"{use_gpu=} and cuda not found. Initialized {device}")
+            print(
+                f"[AUGMENTATION][pid {pid}] {use_gpu=} and cuda not found. Initialized {device}"
+            )
         return device
