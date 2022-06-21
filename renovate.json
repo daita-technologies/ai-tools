@@ -1,0 +1,20 @@
+{
+  "separateMajorMinor": false,
+  "extends": [
+    ":preserveSemverRanges",
+    "group:all",
+    "schedule:monthly",
+    ":maintainLockFilesMonthly"
+  ],
+  "lockFileMaintenance": {
+    "extends": ["group:all"],
+    "commitMessageAction": "Update"
+  },
+  "pip_requirements": {
+    "fileMatch": [
+      "requirements-cpu.txt",
+      "requirements-dev.txt",
+      "requirements-gpu.txt"
+    ]
+  }
+}
