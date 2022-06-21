@@ -1,4 +1,7 @@
 {
+  "baseBranches": ["develop"],
+  "labels": ["dependencies 🔁"],
+  "assignees": ["giaoNguyen70"],
   "separateMajorMinor": false,
   "extends": [
     ":preserveSemverRanges",
@@ -10,7 +13,6 @@
     "extends": ["group:all"],
     "commitMessageAction": "Update"
   },
-  "baseBranches": ["develop"],
   "pip_requirements": {
     "fileMatch": [
       "requirements-cpu.txt",
