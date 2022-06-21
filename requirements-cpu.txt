@@ -2,7 +2,7 @@ torch==1.10.0+cpu
 torchvision==0.11.1+cpu
 ray[serve]==1.10.0
 fastapi==0.70.0
-imageio==2.10.4
+imageio==2.19.3
 kornia==0.6.1
 opencv-python==4.5.4.58
 Pillow==9.0.1
