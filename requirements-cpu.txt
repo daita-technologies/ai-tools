@@ -7,7 +7,7 @@ kornia==0.6.5
 opencv-python==4.6.0.66
 Pillow==9.0.1
 scikit-image==0.19.3
-scipy==1.7.2
+scipy==1.8.1
 pandas==1.4.2
 numpy
 awscli
