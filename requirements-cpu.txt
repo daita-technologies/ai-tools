@@ -8,7 +8,7 @@ opencv-python==4.5.4.58
 Pillow==9.0.1
 scikit-image==0.19.3
 scipy==1.7.2
-pandas==1.4.1
+pandas==1.4.2
 numpy
 awscli
 boto3
