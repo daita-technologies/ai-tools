@@ -10,6 +10,7 @@
     "extends": ["group:all"],
     "commitMessageAction": "Update"
   },
+  "baseBranches": ["develop"],
   "pip_requirements": {
     "fileMatch": [
       "requirements-cpu.txt",
