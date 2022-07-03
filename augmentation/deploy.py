@@ -3,6 +3,7 @@ from ray import serve
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+import os
 import traceback
 from typing import Any, List, Dict
 
@@ -101,6 +102,9 @@ class AugmentationDeployment:
 
         try:
             input_image_paths: str = data["images_paths"]
+            for i, image_path in enumerate(input_image_paths):
+                input_image_paths[i] = os.path.join("/mnt/efs", image_path)
+
             output_dir: str = data["output_folder"]
             augment_codes: List[str] = data["codes"]
             num_augments_per_image: int = data.get("num_augments_per_image", 1)
