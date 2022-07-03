@@ -103,7 +103,7 @@ class PreprocessingDeployment:
         try:
             input_image_paths: str = data["images_paths"]
             for i, image_path in enumerate(input_image_paths):
-                input_image_paths[i] = os.path.join("/mnt/efs", image_path)
+                input_image_paths[i] = os.path.join("/mnt/efs/mnt", image_path)
 
             output_dir: str = data["output_folder"]
             preprocess_codes: List[str] = data["codes"]
