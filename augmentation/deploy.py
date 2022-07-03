@@ -101,11 +101,11 @@ class AugmentationDeployment:
         data: Dict[str, object] = await request.json()
 
         try:
-            input_image_paths: str = data["images_paths"]
-            for i, image_path in enumerate(input_image_paths):
-                input_image_paths[i] = os.path.join("/mnt/efs/mnt", image_path)
-
-            output_dir: str = data["output_folder"]
+            input_image_paths = [
+                os.path.join("/mnt/efs/mnt", image_path)
+                for image_path in data["images_paths"]
+            ]
+            output_dir = os.path.join("/mnt/efs/mnt", data["output_folder"])
             augment_codes: List[str] = data["codes"]
             num_augments_per_image: int = data.get("num_augments_per_image", 1)
             parameters: Dict[str, Dict[str, Any]] = data.get("parameters", {})
