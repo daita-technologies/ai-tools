@@ -1,7 +1,8 @@
 import numpy as np
 from skimage.color import rgb2hsv
-from typing import List, Union, Tuple
+from typing import List, Tuple
 
+from utils import read_image
 from preprocessing.preprocessing_utils import (
     calculate_signal_to_noise,
     get_index_of_median_value,
@@ -64,11 +65,11 @@ def find_reference_signal_to_noise_image(
 
 
 def find_reference_high_resolution_image(
-    input_images: List[np.ndarray], input_image_paths: List[str]
+    input_image_paths: List[str]
 ) -> str:
 
-    heights: List[float] = [image.shape[0] for image in input_images]
-    widths: List[float] = [image.shape[1] for image in input_images]
+    heights: List[float] = [read_image(image_path).shape[0] for image_path in input_image_paths]
+    widths: List[float] = [read_image(image_path).shape[1] for image_path in input_image_paths]
     aspect_ratios: List[float] = [
         height / width for height, width in zip(heights, widths)
     ]
