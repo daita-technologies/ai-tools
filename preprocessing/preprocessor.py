@@ -7,6 +7,7 @@ from copy import deepcopy
 from collections import defaultdict
 import traceback
 import multiprocessing as mp
+from functools import partial
 from typing import List, Optional, Dict, Tuple, Union
 
 import preprocessing.preprocessing_list  # Import to register all preprocessing
@@ -151,10 +152,13 @@ class Preprocessor:
         batch_size: int = 8
         num_batches: int = round(len(input_image_paths) / batch_size)
 
-        for batch_images in np.array_split(input_image_paths, num_batches):
-            batch_preprocess_name_to_values: Dict[str, List[float]] = self.__find_reference_image_path(
-                batch_images, preprocess_names
-            )
+        # Multiprocessing for finding reference images
+        pool = mp.Pool(processes=mp.cpu_count())
+        batch_image_paths: List[List[str]] = np.array_split(input_image_paths, num_batches)
+        for batch_preprocess_name_to_values in pool.starmap(
+            partial(self._find_reference_image_path, preprocess_names=preprocess_names),
+            zip(batch_image_paths)
+        ):
             for preprocess_name, values in batch_preprocess_name_to_values.items():
                 preprocess_name_to_values[preprocess_name].extend(values)
 
@@ -171,7 +175,7 @@ class Preprocessor:
 
         # Due to some difficulty, we need to find the reference image of high resolution separately
         if preprocess_high_resolution is True:
-            batch_preprocess_name_to_values: Dict[str, str] = self.__find_reference_image_path(
+            batch_preprocess_name_to_values: Dict[str, str] = self._find_reference_image_path(
                 input_image_paths, ["high_resolution"]
             )
             reference_image_path: str = batch_preprocess_name_to_values["high_resolution"][0]
@@ -243,7 +247,7 @@ class Preprocessor:
         )
         return output_image_path
 
-    def __find_reference_image_path(
+    def _find_reference_image_path(
         self,
         input_image_paths: List[str],
         preprocess_names: List[str],
@@ -262,8 +266,7 @@ class Preprocessor:
                 input_images.append(image)
             except Exception:
                 print(
-                    f"[PREPROCESSING][pid {pid}] Error reading {input_image_path}: {traceback.format_exc()}. "
-                    f"Skip this image."
+                    f"[PREPROCESSING][pid {pid}] Error reading {input_image_path}:\n{traceback.format_exc()}"
                 )
                 continue
 
