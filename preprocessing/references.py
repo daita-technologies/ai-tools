@@ -64,12 +64,14 @@ def find_reference_signal_to_noise_image(
     return reference_image_path, signal_to_noise_ratios
 
 
-def find_reference_high_resolution_image(
-    input_image_paths: List[str]
-) -> str:
+def find_reference_high_resolution_image(input_image_paths: List[str]) -> str:
 
-    heights: List[float] = [read_image(image_path).shape[0] for image_path in input_image_paths]
-    widths: List[float] = [read_image(image_path).shape[1] for image_path in input_image_paths]
+    heights: List[float] = [
+        read_image(image_path).shape[0] for image_path in input_image_paths
+    ]
+    widths: List[float] = [
+        read_image(image_path).shape[1] for image_path in input_image_paths
+    ]
     aspect_ratios: List[float] = [
         height / width for height, width in zip(heights, widths)
     ]
