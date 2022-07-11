@@ -107,7 +107,9 @@ class Preprocessor:
 
         # Load and resize all reference images beforehand
         reference_images_dict: Dict[str, np.ndarray] = {
-            preprocess_code: resize_image(read_image(reference_image_path), Preprocessor.IMAGE_SIZE)
+            preprocess_code: resize_image(
+                read_image(reference_image_path), Preprocessor.IMAGE_SIZE
+            )
             for preprocess_code, reference_image_path in reference_paths_dict.items()
         }
 
@@ -145,19 +147,25 @@ class Preprocessor:
         preprocess_high_resolution: bool = False
         if "PRE-009" in preprocess_codes:  # high_resolution:
             preprocess_high_resolution = True
-            preprocess_codes.remove("PRE-009")  # We will deal with high_resolution separately
+            preprocess_codes.remove(
+                "PRE-009"
+            )  # We will deal with high_resolution separately
 
-        preprocess_names: List[str] = [CodeToPreprocess[code] for code in preprocess_codes]
+        preprocess_names: List[str] = [
+            CodeToPreprocess[code] for code in preprocess_codes
+        ]
         preprocess_name_to_values: Dict[str, List[float]] = defaultdict(list)
         batch_size: int = 8
         num_batches: int = round(len(input_image_paths) / batch_size)
 
         # Multiprocessing for finding reference images
         pool = mp.Pool(processes=mp.cpu_count())
-        batch_image_paths: List[List[str]] = np.array_split(input_image_paths, num_batches)
+        batch_image_paths: List[List[str]] = np.array_split(
+            input_image_paths, num_batches
+        )
         for batch_preprocess_name_to_values in pool.starmap(
             partial(self._find_reference_image_path, preprocess_names=preprocess_names),
-            zip(batch_image_paths)
+            zip(batch_image_paths),
         ):
             for preprocess_name, values in batch_preprocess_name_to_values.items():
                 preprocess_name_to_values[preprocess_name].extend(values)
@@ -165,7 +173,9 @@ class Preprocessor:
         # Mapping from a preprocess_code to its corresponding reference image path
         reference_paths_dict: Dict[str, str] = {}
         # Reference image is the one with median value
-        for preprocess_code, (preprocess_name, values) in zip(preprocess_codes, preprocess_name_to_values.items()):
+        for preprocess_code, (preprocess_name, values) in zip(
+            preprocess_codes, preprocess_name_to_values.items()
+        ):
             median_idx: int = get_index_of_median_value(values)
             reference_image_path: str = input_image_paths[median_idx]
             reference_paths_dict[preprocess_code] = reference_image_path
@@ -175,10 +185,12 @@ class Preprocessor:
 
         # Due to some difficulty, we need to find the reference image of high resolution separately
         if preprocess_high_resolution is True:
-            batch_preprocess_name_to_values: Dict[str, str] = self._find_reference_image_path(
-                input_image_paths, ["high_resolution"]
-            )
-            reference_image_path: str = batch_preprocess_name_to_values["high_resolution"][0]
+            batch_preprocess_name_to_values: Dict[
+                str, str
+            ] = self._find_reference_image_path(input_image_paths, ["high_resolution"])
+            reference_image_path: str = batch_preprocess_name_to_values[
+                "high_resolution"
+            ][0]
             reference_paths_dict["PRE-009"] = reference_image_path
             print(
                 f"[PREPROCESSING][pid {pid}] Reference image of PRE-009 (high_resolution): {reference_image_path}"
@@ -272,7 +284,9 @@ class Preprocessor:
 
         for preprocess_name in preprocess_names:
             if preprocess_name == "normalize_brightness":
-                _, brightness_ls = find_reference_brightness_image(input_images, input_image_paths)
+                _, brightness_ls = find_reference_brightness_image(
+                    input_images, input_image_paths
+                )
                 preprocess_name_to_values[preprocess_name].extend(brightness_ls)
 
             elif preprocess_name == "normalize_hue":
@@ -280,15 +294,23 @@ class Preprocessor:
                 preprocess_name_to_values[preprocess_name].extend(hue_ls)
 
             elif preprocess_name == "normalize_saturation":
-                _, saturation_ls = find_reference_saturation_image(input_images, input_image_paths)
+                _, saturation_ls = find_reference_saturation_image(
+                    input_images, input_image_paths
+                )
                 preprocess_name_to_values[preprocess_name].extend(saturation_ls)
 
             elif preprocess_name == "high_resolution":
-                reference_image_path: str = find_reference_high_resolution_image(input_image_paths)
-                preprocess_name_to_values[preprocess_name].extend([reference_image_path])
+                reference_image_path: str = find_reference_high_resolution_image(
+                    input_image_paths
+                )
+                preprocess_name_to_values[preprocess_name].extend(
+                    [reference_image_path]
+                )
 
             else:
-                _, signal_to_noise_ls = find_reference_signal_to_noise_image(input_images, input_image_paths)
+                _, signal_to_noise_ls = find_reference_signal_to_noise_image(
+                    input_images, input_image_paths
+                )
                 preprocess_name_to_values[preprocess_name].extend(signal_to_noise_ls)
 
         return preprocess_name_to_values
