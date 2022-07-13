@@ -119,10 +119,12 @@ class Preprocessor:
             self._process_one_image,
             output_dir=output_dir,
             preprocess_codes=preprocess_codes,
-            reference_images_dict=reference_images_dict
+            reference_images_dict=reference_images_dict,
         )
         output_image_paths: List[str] = []
-        for output_image_path, message in pool.map(process_one_image, input_image_paths):
+        for output_image_path, message in pool.map(
+            process_one_image, input_image_paths
+        ):
             if output_image_path is not None:
                 output_image_paths.append(output_image_path)
             else:  # If there are some errors (input image not found, weird image...) then skip the image
@@ -232,7 +234,9 @@ class Preprocessor:
                     image, is_normalized = PREPROCESSING[preprocess_name]().process(
                         image, reference_image, image_path=input_image_path
                     )
-                    print(f"[PREPROCESSING][pid {pid}] {preprocess_name}:", is_normalized)
+                    print(
+                        f"[PREPROCESSING][pid {pid}] {preprocess_name}:", is_normalized
+                    )
 
                 except Exception:
                     print(f"[PREPROCESSING][pid {pid}] ERROR: {preprocess_name}")
@@ -249,7 +253,9 @@ class Preprocessor:
 
             # Save output image
             image_name: str = os.path.basename(input_image_path)
-            output_image_path: str = os.path.join(output_dir, f"preprocessed_{image_name}")
+            output_image_path: str = os.path.join(
+                output_dir, f"preprocessed_{image_name}"
+            )
             start = time.time()
             save_image(output_image_path, image)
             end = time.time()
