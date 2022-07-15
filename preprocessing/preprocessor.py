@@ -113,8 +113,23 @@ class Preprocessor:
             for preprocess_code, reference_image_path in reference_paths_dict.items()
         }
 
-        # Process each input image
-        pool = mp.Pool(processes=mp.cpu_count() - 2 if mp.cpu_count() > 2 else 1)
+        # # Process input images with multi-processing
+        # pool = mp.Pool(processes=mp.cpu_count() - 2 if mp.cpu_count() > 2 else 1)
+        # process_one_image = partial(
+        #     self._process_one_image,
+        #     output_dir=output_dir,
+        #     preprocess_codes=preprocess_codes,
+        #     reference_images_dict=reference_images_dict
+        # )
+        # output_image_paths: List[str] = []
+        # for output_image_path, message in pool.map(process_one_image, input_image_paths):
+        #     if output_image_path is not None:
+        #         output_image_paths.append(output_image_path)
+        #     else:  # If there are some errors (input image not found, weird image...) then skip the image
+        #         print(message)
+        #         continue
+
+        # Process input images sequentially
         process_one_image = partial(
             self._process_one_image,
             output_dir=output_dir,
@@ -122,7 +137,8 @@ class Preprocessor:
             reference_images_dict=reference_images_dict
         )
         output_image_paths: List[str] = []
-        for output_image_path, message in pool.map(process_one_image, input_image_paths):
+        for input_image_path in input_image_paths:
+            output_image_path, message = process_one_image(input_image_path)
             if output_image_path is not None:
                 output_image_paths.append(output_image_path)
             else:  # If there are some errors (input image not found, weird image...) then skip the image
