@@ -175,7 +175,8 @@ class Preprocessor:
         num_batches: int = round(len(input_image_paths) / batch_size)
 
         # Multiprocessing for finding reference images
-        pool = mp.Pool(processes=mp.cpu_count() - 2 if mp.cpu_count() > 2 else 1)
+        # pool = mp.Pool(processes=mp.cpu_count() - 2 if mp.cpu_count() > 2 else 1)
+        pool = mp.Pool(processes=1)
         batch_image_paths: List[List[str]] = np.array_split(
             input_image_paths, num_batches
         )
