@@ -8,7 +8,7 @@ from collections import defaultdict
 import traceback
 import multiprocessing as mp
 from functools import partial
-from typing import List, Optional, Dict, Tuple, Union
+from typing import List, Optional, Dict, Tuple, Union, Any
 
 import preprocessing.preprocessing_list  # Import to register all preprocessing
 from preprocessing.registry import PREPROCESSING, CodeToPreprocess
@@ -174,16 +174,24 @@ class Preprocessor:
         batch_size: int = 8
         num_batches: int = round(len(input_image_paths) / batch_size)
 
-        # Multiprocessing for finding reference images
+        # # Finding reference images using multiprocessing
         # pool = mp.Pool(processes=mp.cpu_count() - 2 if mp.cpu_count() > 2 else 1)
-        pool = mp.Pool(processes=1)
-        batch_image_paths: List[List[str]] = np.array_split(
-            input_image_paths, num_batches
-        )
-        for batch_preprocess_name_to_values in pool.starmap(
-            partial(self._find_reference_image_path, preprocess_names=preprocess_names),
-            zip(batch_image_paths),
-        ):
+        # batch_image_paths: List[List[str]] = np.array_split(
+        #     input_image_paths, num_batches
+        # )
+        # for batch_preprocess_name_to_values in pool.starmap(
+        #     partial(self._find_reference_image_path, preprocess_names=preprocess_names),
+        #     zip(batch_image_paths),
+        # ):
+        #     for preprocess_name, values in batch_preprocess_name_to_values.items():
+        #         preprocess_name_to_values[preprocess_name].extend(values)
+
+        # Finding reference images sequentially
+        for batch_image_paths in np.array_split(input_image_paths, num_batches):
+            batch_preprocess_name_to_values: Dict[str, Any] = self._find_reference_image_path(
+                batch_image_paths,
+                preprocess_names
+            )
             for preprocess_name, values in batch_preprocess_name_to_values.items():
                 preprocess_name_to_values[preprocess_name].extend(values)
 
