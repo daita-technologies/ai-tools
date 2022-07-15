@@ -32,7 +32,7 @@ if __name__ == "__main__":
     if deploy_preprocessing:
         PreprocessingDeployment.options(
             route_prefix="/preprocessing",
-            num_replicas=mp.cpu_count() - 1 if mp.cpu_count() > 1 else 1,
+            num_replicas=mp.cpu_count() - 2 if mp.cpu_count() > 2 else 1,
             max_concurrent_queries=1000,
             ray_actor_options={
                 "num_cpus": 1,
