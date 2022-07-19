@@ -188,10 +188,9 @@ class Preprocessor:
 
         # Finding reference images sequentially
         for batch_image_paths in np.array_split(input_image_paths, num_batches):
-            batch_preprocess_name_to_values: Dict[str, Any] = self._find_reference_image_path(
-                batch_image_paths,
-                preprocess_names
-            )
+            batch_preprocess_name_to_values: Dict[
+                str, Any
+            ] = self._find_reference_image_path(batch_image_paths, preprocess_names)
             for preprocess_name, values in batch_preprocess_name_to_values.items():
                 preprocess_name_to_values[preprocess_name].extend(values)
 
