@@ -5,8 +5,10 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    open-pull-requests-limit: 10
     target-branch: "develop"
     labels:
       - "dependencies 🔁"
+      - "python 🐍"
     assignees:
       - "giaoNguyen70"
