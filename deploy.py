@@ -14,6 +14,15 @@ if __name__ == "__main__":
     deploy_augmentation: bool = True
     deploy_preprocessing: bool = True
 
+    # Explanation of `ray_actor_options`:
+    # -----------------------------------
+    # Example configuration
+    # ```
+    # ray_actor_options={
+    #     "num_cpus": 1 if mp.cpu_count() > 2 else 0.5,
+    #     "num_gpus": 0,
+    # },
+    # ```
     # If the instance has only 1 CPU core, augmentation and preprocessing each
     # use half of the CPU, i.e. 0.5. If the instance has more than 2 CPU cores,
     # augmentation uses 1 CPU core, the operating system uses 1 CPU core,
@@ -24,7 +33,7 @@ if __name__ == "__main__":
             num_replicas=1,
             max_concurrent_queries=1000,
             ray_actor_options={
-                "num_cpus": 1 if mp.cpu_count() > 2 else 0.5,
+                "num_cpus": 1,
                 "num_gpus": 0,
             },
         ).deploy(use_gpu=False)
@@ -35,7 +44,7 @@ if __name__ == "__main__":
             num_replicas=mp.cpu_count() - 2 if mp.cpu_count() > 2 else 1,
             max_concurrent_queries=1000,
             ray_actor_options={
-                "num_cpus": 1 if mp.cpu_count() > 2 else 0.5,
+                "num_cpus": 1,
                 "num_gpus": 0,
             },
         ).deploy(use_gpu=False)
