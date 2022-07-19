@@ -113,7 +113,7 @@ class Preprocessor:
             for preprocess_code, reference_image_path in reference_paths_dict.items()
         }
 
-        # # Process input images with multi-processing
+        # # Process input images with multiprocessing
         # pool = mp.Pool(processes=mp.cpu_count() - 2 if mp.cpu_count() > 2 else 1)
         # process_one_image = partial(
         #     self._process_one_image,
