@@ -1,7 +1,7 @@
 {
   "baseBranches": ["develop"],
   "labels": ["dependencies 🔁"],
-  "assignees": ["giaoNguyen70"],
+  "assignees": ["AI-Daita"],
   "separateMajorMinor": false,
   "extends": [
     ":preserveSemverRanges",
