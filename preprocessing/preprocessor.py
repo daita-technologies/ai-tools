@@ -4,8 +4,11 @@ import torch
 import time
 import os
 from copy import deepcopy
+from collections import defaultdict
 import traceback
-from typing import List, Optional, Dict, Tuple
+import multiprocessing as mp
+from functools import partial
+from typing import List, Optional, Dict, Tuple, Union, Any
 
 import preprocessing.preprocessing_list  # Import to register all preprocessing
 from preprocessing.registry import PREPROCESSING, CodeToPreprocess
@@ -17,10 +20,12 @@ from preprocessing.references import (
     find_reference_signal_to_noise_image,
     find_reference_high_resolution_image,
 )
+from preprocessing.preprocessing_utils import get_index_of_median_value
 
 
 class Preprocessor:
     SUPPORTED_EXTENSIONS: Tuple = (".png", ".jpg", ".jpeg")
+    IMAGE_SIZE: int = 1024
 
     def __init__(self, use_gpu: bool = False):
         """
@@ -53,7 +58,8 @@ class Preprocessor:
             _, extension = os.path.splitext(image_path)
             if extension.lower() not in Preprocessor.SUPPORTED_EXTENSIONS:
                 print(
-                    f"[PREPROCESSING][pid {pid}] [WARNING] Only support these extensions: {Preprocessor.SUPPORTED_EXTENSIONS}. "
+                    f"[PREPROCESSING][pid {pid}] [WARNING] "
+                    f"Only support these extensions: {Preprocessor.SUPPORTED_EXTENSIONS}. "
                     f"But got {extension=} in image {image_path}."
                     "Skip this image."
                 )
@@ -91,7 +97,7 @@ class Preprocessor:
                 f"[PREPROCESSING][pid {pid}] Reference images are not given. Finding reference image..."
             )
             reference_paths_dict: Dict[str, str] = self.get_reference_image_paths(
-                input_image_paths, preprocess_codes
+                input_image_paths, preprocess_codes.copy()
             )
         else:
             print(
@@ -101,24 +107,42 @@ class Preprocessor:
 
         # Load and resize all reference images beforehand
         reference_images_dict: Dict[str, np.ndarray] = {
-            preprocess_code: resize_image(read_image(reference_image_path), 1024)
+            preprocess_code: resize_image(
+                read_image(reference_image_path), Preprocessor.IMAGE_SIZE
+            )
             for preprocess_code, reference_image_path in reference_paths_dict.items()
         }
 
-        # Process each input image
+        # # Process input images with multiprocessing
+        # pool = mp.Pool(processes=mp.cpu_count() - 2 if mp.cpu_count() > 2 else 1)
+        # process_one_image = partial(
+        #     self._process_one_image,
+        #     output_dir=output_dir,
+        #     preprocess_codes=preprocess_codes,
+        #     reference_images_dict=reference_images_dict
+        # )
+        # output_image_paths: List[str] = []
+        # for output_image_path, message in pool.map(process_one_image, input_image_paths):
+        #     if output_image_path is not None:
+        #         output_image_paths.append(output_image_path)
+        #     else:  # If there are some errors (input image not found, weird image...) then skip the image
+        #         print(message)
+        #         continue
+
+        # Process input images sequentially
+        process_one_image = partial(
+            self._process_one_image,
+            output_dir=output_dir,
+            preprocess_codes=preprocess_codes,
+            reference_images_dict=reference_images_dict,
+        )
         output_image_paths: List[str] = []
         for input_image_path in input_image_paths:
-            try:
-                output_image_path: Optional[str] = self.__process_one_image(
-                    input_image_path,
-                    output_dir,
-                    preprocess_codes,
-                    reference_images_dict,
-                )
+            output_image_path, message = process_one_image(input_image_path)
+            if output_image_path is not None:
                 output_image_paths.append(output_image_path)
-            # If there are some errors (input image not found, weird image...) then skip the image
-            except Exception:
-                print(f"[PREPROCESSING][pid {pid}] ERROR: {traceback.format_exc()}")
+            else:  # If there are some errors (input image not found, weird image...) then skip the image
+                print(message)
                 continue
 
         end_preprocess = time.time()
@@ -136,47 +160,75 @@ class Preprocessor:
 
         pid: int = os.getpid()
 
+        preprocess_high_resolution: bool = False
+        if "PRE-009" in preprocess_codes:  # high_resolution:
+            preprocess_high_resolution = True
+            preprocess_codes.remove(
+                "PRE-009"
+            )  # We will deal with high_resolution separately
+
+        preprocess_names: List[str] = [
+            CodeToPreprocess[code] for code in preprocess_codes
+        ]
+        preprocess_name_to_values: Dict[str, List[float]] = defaultdict(list)
+        batch_size: int = 8
+        num_batches: int = round(len(input_image_paths) / batch_size)
+
+        # # Finding reference images using multiprocessing
+        # pool = mp.Pool(processes=mp.cpu_count() - 2 if mp.cpu_count() > 2 else 1)
+        # batch_image_paths: List[List[str]] = np.array_split(
+        #     input_image_paths, num_batches
+        # )
+        # for batch_preprocess_name_to_values in pool.starmap(
+        #     partial(self._find_reference_image_path, preprocess_names=preprocess_names),
+        #     zip(batch_image_paths),
+        # ):
+        #     for preprocess_name, values in batch_preprocess_name_to_values.items():
+        #         preprocess_name_to_values[preprocess_name].extend(values)
+
+        # Finding reference images sequentially
+        for batch_image_paths in np.array_split(input_image_paths, num_batches):
+            batch_preprocess_name_to_values: Dict[
+                str, Any
+            ] = self._find_reference_image_path(batch_image_paths, preprocess_names)
+            for preprocess_name, values in batch_preprocess_name_to_values.items():
+                preprocess_name_to_values[preprocess_name].extend(values)
+
         # Mapping from a preprocess_code to its corresponding reference image path
         reference_paths_dict: Dict[str, str] = {}
-        # Read all input images beforehand
-
-        input_images: List[np.ndarray] = []
-        for input_image_path in input_image_paths:
-            try:
-                image: np.ndarray = read_image(input_image_path)
-                input_images.append(image)
-            except Exception:
-                print(
-                    f"[PREPROCESSING][pid {pid}] Error reading {input_image_path}: {traceback.format_exc()}. "
-                    f"Skip this image."
-                )
-
-        # Find reference image for each preprocessing code
-        for code in preprocess_codes:
-            preprocess_name: str = CodeToPreprocess[code]
+        # Reference image is the one with median value
+        for preprocess_code, (preprocess_name, values) in zip(
+            preprocess_codes, preprocess_name_to_values.items()
+        ):
+            median_idx: int = get_index_of_median_value(values)
+            reference_image_path: str = input_image_paths[median_idx]
+            reference_paths_dict[preprocess_code] = reference_image_path
             print(
-                f"[PREPROCESSING][pid {pid}] Reference image of {code} ({preprocess_name}): ",
-                end="",
+                f"[PREPROCESSING][pid {pid}] Reference image of {preprocess_code} ({preprocess_name}): {reference_image_path}"
             )
-            start = time.time()
-            reference_image_path: str = self.__find_reference_image_path(
-                input_images, input_image_paths, preprocess_name
-            )
-            reference_paths_dict[code] = reference_image_path
-            end = time.time()
+
+        # Due to some difficulty, we need to find the reference image of high resolution separately
+        if preprocess_high_resolution is True:
+            batch_preprocess_name_to_values: Dict[
+                str, str
+            ] = self._find_reference_image_path(input_image_paths, ["high_resolution"])
+            reference_image_path: str = batch_preprocess_name_to_values[
+                "high_resolution"
+            ][0]
+            reference_paths_dict["PRE-009"] = reference_image_path
             print(
-                f"{os.path.basename(reference_image_path)} ({round(end - start, 4)} seconds)"
+                f"[PREPROCESSING][pid {pid}] Reference image of PRE-009 (high_resolution): {reference_image_path}"
             )
 
         return reference_paths_dict
 
-    def __process_one_image(
+    def _process_one_image(
         self,
         input_image_path: str,
         output_dir: str,
         preprocess_codes: List[str],
         reference_images_dict: Dict[str, np.ndarray],
-    ) -> Optional[str]:
+    ) -> Tuple[Optional[str], Optional[str]]:
         """
         Apply preprocessing to input image given a reference image.
         Return saved output image path or None.
@@ -188,76 +240,112 @@ class Preprocessor:
         try:
             image: np.ndarray = read_image(input_image_path)
         except Exception:
+            message: str = f"[PREPROCESSING][pid {pid}] Error reading {input_image_path}: {traceback.format_exc()}"
+            print(message)
+            return None, message
+
+        try:
+            H, W, _ = image.shape
+            # Resize images for faster processeing
+            image = resize_image(image, size=1024)
+
+            for preprocess_code in preprocess_codes:
+                try:
+                    preprocess_name: str = CodeToPreprocess[preprocess_code]
+                    reference_image: np.ndarray = reference_images_dict[preprocess_code]
+                    image, is_normalized = PREPROCESSING[preprocess_name]().process(
+                        image, reference_image, image_path=input_image_path
+                    )
+                    print(
+                        f"[PREPROCESSING][pid {pid}] {preprocess_name}:", is_normalized
+                    )
+
+                except Exception:
+                    print(f"[PREPROCESSING][pid {pid}] ERROR: {preprocess_name}")
+                    print(f"[PREPROCESSING][pid {pid}] {traceback.format_exc()}")
+                    continue
+
+            # Resize back to original size
+            image = resize_image(image, size=H if H < W else W)
+            end = time.time()
             print(
-                f"[PREPROCESSING][pid {pid}] Error reading {input_image_path}: {traceback.format_exc()}"
+                f"[PREPROCESSING][pid {pid}] "
+                f"Done preprocessing: {round(end - start, 4)} seconds"
             )
-            raise
 
-        H, W, _ = image.shape
-        # Resize images for faster processeing
-        image = resize_image(image, size=1024)
+            # Save output image
+            image_name: str = os.path.basename(input_image_path)
+            output_image_path: str = os.path.join(
+                output_dir, f"preprocessed_{image_name}"
+            )
+            start = time.time()
+            save_image(output_image_path, image)
+            end = time.time()
+            print(
+                f"[PREPROCESSING][pid {pid}] "
+                f"Save image {output_image_path}: {round(end - start, 2)} seconds"
+            )
+            return output_image_path, None
 
-        for preprocess_code in preprocess_codes:
+        except Exception:
+            message = traceback.format_exc()
+            return None, message
+
+    def _find_reference_image_path(
+        self,
+        input_image_paths: List[str],
+        preprocess_names: List[str],
+    ) -> Dict[str, List[Union[float, str]]]:
+
+        pid = os.getpid()
+
+        # Store list of values from find_reference* methods
+        preprocess_name_to_values: Dict[str, List[float]] = defaultdict(list)
+
+        # Read input images beforehand
+        input_images: List[np.ndarray] = []
+        for input_image_path in input_image_paths:
             try:
-                preprocess_name: str = CodeToPreprocess[preprocess_code]
-                reference_image: np.ndarray = reference_images_dict[preprocess_code]
-                image, is_normalized = PREPROCESSING[preprocess_name]().process(
-                    image, reference_image, image_path=input_image_path
-                )
-                print(f"[PREPROCESSING][pid {pid}] {preprocess_name}:", is_normalized)
-
+                image: np.ndarray = read_image(input_image_path)
+                input_images.append(image)
             except Exception:
-                print(f"[PREPROCESSING][pid {pid}] ERROR: {preprocess_name}")
-                print(f"[PREPROCESSING][pid {pid}] {traceback.format_exc()}")
+                print(
+                    f"[PREPROCESSING][pid {pid}] Error reading {input_image_path}:\n{traceback.format_exc()}"
+                )
                 continue
 
-        # Resize back to original size
-        image = resize_image(image, size=H if H < W else W)
-        end = time.time()
-        print(
-            f"[PREPROCESSING][pid {pid}] "
-            f"Done preprocessing: {round(end - start, 4)} seconds"
-        )
+        for preprocess_name in preprocess_names:
+            if preprocess_name == "normalize_brightness":
+                _, brightness_ls = find_reference_brightness_image(
+                    input_images, input_image_paths
+                )
+                preprocess_name_to_values[preprocess_name].extend(brightness_ls)
 
-        # Save output image
-        image_name: str = os.path.basename(input_image_path)
-        output_image_path: str = os.path.join(output_dir, f"preprocessed_{image_name}")
-        start = time.time()
-        save_image(output_image_path, image)
-        end = time.time()
-        print(
-            f"[PREPROCESSING][pid {pid}] "
-            f"Save image {output_image_path}: {round(end - start, 2)} seconds"
-        )
-        return output_image_path
+            elif preprocess_name == "normalize_hue":
+                _, hue_ls = find_reference_hue_image(input_images, input_image_paths)
+                preprocess_name_to_values[preprocess_name].extend(hue_ls)
 
-    def __find_reference_image_path(
-        self,
-        input_images: List[np.ndarray],
-        input_image_paths: List[str],
-        preprocess_name: str,
-    ) -> str:
-        if preprocess_name == "normalize_brightness":
-            reference_image_path: str = find_reference_brightness_image(
-                input_images, input_image_paths
-            )
-        elif preprocess_name == "normalize_hue":
-            reference_image_path = find_reference_hue_image(
-                input_images, input_image_paths
-            )
-        elif preprocess_name == "normalize_saturation":
-            reference_image_path = find_reference_saturation_image(
-                input_images, input_image_paths
-            )
-        elif preprocess_name == "high_resolution":
-            reference_image_path: str = find_reference_high_resolution_image(
-                input_images, input_image_paths
-            )
-        else:
-            reference_image_path = find_reference_signal_to_noise_image(
-                input_images, input_image_paths
-            )
-        return reference_image_path
+            elif preprocess_name == "normalize_saturation":
+                _, saturation_ls = find_reference_saturation_image(
+                    input_images, input_image_paths
+                )
+                preprocess_name_to_values[preprocess_name].extend(saturation_ls)
+
+            elif preprocess_name == "high_resolution":
+                reference_image_path: str = find_reference_high_resolution_image(
+                    input_image_paths
+                )
+                preprocess_name_to_values[preprocess_name].extend(
+                    [reference_image_path]
+                )
+
+            else:
+                _, signal_to_noise_ls = find_reference_signal_to_noise_image(
+                    input_images, input_image_paths
+                )
+                preprocess_name_to_values[preprocess_name].extend(signal_to_noise_ls)
+
+        return preprocess_name_to_values
 
     @staticmethod
     def __init_device(use_gpu: bool) -> torch.device:
