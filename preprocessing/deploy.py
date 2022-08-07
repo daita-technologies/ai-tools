@@ -113,7 +113,7 @@ class PreprocessingDeployment:
                 for preprocess_code, image_path in data["reference_images"].items()
             }
             output_image_paths: List[str] = self.preprocessor.process(
-                input_image_paths, output_dir, preprocess_codes, reference_paths_dict
+                input_image_paths, preprocess_codes, reference_paths_dict, output_dir
             )
             return {
                 "images_paths": output_image_paths,
