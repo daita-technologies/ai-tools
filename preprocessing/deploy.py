@@ -39,7 +39,7 @@ class PreprocessingDeployment:
 
             - "images_folder": path to folder containing input images.
 
-            - "output_folder": path to foler containing output images.
+            - "output_folder": path to folder containing output images.
 
             - "augment_code": code of augmentation, must be one of:
 

@@ -1,6 +1,6 @@
 FROM python:3.8.13-slim
 
-# Install neccesary build tools
+# Install necessary build tools
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends build-essential ffmpeg libsm6 libxext6
 

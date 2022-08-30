@@ -163,7 +163,7 @@ class Augmentor:
 
         Return
         -------
-        List of parameters correponding to each generated image.
+        List of parameters corresponding to each generated image.
         ```
         [
             # Output of the first generated image

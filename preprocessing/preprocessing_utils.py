@@ -65,7 +65,7 @@ def calculate_luminance(image: np.ndarray) -> float:
 
 def get_index_of_median_value(array: Union[List[float], np.ndarray]) -> int:
     """
-    Find index of the median value in a list or 1-D arry
+    Find index of the median value in a list or 1-D array
     """
     index: int = np.argsort(array)[len(array) // 2]
     return index
