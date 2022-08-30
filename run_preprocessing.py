@@ -6,7 +6,9 @@ from preprocessing.preprocessor import Preprocessor
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run preprocessing")
-    parser.add_argument("--json_path", type=str, required=True, help="Path to input json")
+    parser.add_argument(
+        "--json_path", type=str, required=True, help="Path to input json"
+    )
     args: Dict[str, str] = vars(parser.parse_args())
 
     with open(args["json_path"], "r") as f:
