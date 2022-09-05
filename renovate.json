@@ -1,7 +1,7 @@
 {
   "baseBranches": ["develop"],
   "labels": ["dependencies 🔁"],
-  "assignees": ["AI-Daita"],
+  "assignees": ["ttattl"],
   "separateMajorMinor": false,
   "extends": [
     ":preserveSemverRanges",
