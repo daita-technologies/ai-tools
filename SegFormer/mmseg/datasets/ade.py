@@ -118,7 +118,7 @@ class ADE20KDataset(CustomDataset):
         "van",
         "ship",
         "fountain",
-        "conveyer belt",
+        "conveyor belt",
         "canopy",
         "washer",
         "plaything",

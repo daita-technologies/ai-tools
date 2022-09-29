@@ -249,17 +249,17 @@ class UNet(nn.Module):
         strides (Sequence[int 1 | 2]): Strides of each stage in encoder.
             len(strides) is equal to num_stages. Normally the stride of the
             first stage in encoder is 1. If strides[i]=2, it uses stride
-            convolution to downsample in the correspondance encoder stage.
+            convolution to downsample in the correspondence encoder stage.
             Default: (1, 1, 1, 1, 1).
         enc_num_convs (Sequence[int]): Number of convolutional layers in the
-            convolution block of the correspondance encoder stage.
+            convolution block of the correspondence encoder stage.
             Default: (2, 2, 2, 2, 2).
         dec_num_convs (Sequence[int]): Number of convolutional layers in the
-            convolution block of the correspondance decoder stage.
+            convolution block of the correspondence decoder stage.
             Default: (2, 2, 2, 2).
         downsamples (Sequence[int]): Whether use MaxPool to downsample the
             feature map after the first stage of encoder
-            (stages: [1, num_stages)). If the correspondance encoder stage use
+            (stages: [1, num_stages)). If the correspondence encoder stage use
             stride convolution (strides[i]=2), it will never use MaxPool to
             downsample, even downsamples[i-1]=True.
             Default: (True, True, True, True).

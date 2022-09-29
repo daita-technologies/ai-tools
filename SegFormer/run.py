@@ -25,10 +25,10 @@ DEVICE: str = os.getenv("DEVICE", "cpu")
 # Setup logger
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
-formater = logging.Formatter(
+formatter = logging.Formatter(
     "%(asctime)s  %(name)s  %(levelname)s: %(message)s", datefmt="%d-%b-%y %H:%M:%S"
 )
-handler.setFormatter(formater)
+handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 

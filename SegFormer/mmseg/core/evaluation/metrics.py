@@ -19,7 +19,7 @@ def intersect_and_union(
         ignore_index (int): Index that will be ignored in evaluation.
         label_map (dict): Mapping old labels to new labels. The parameter will
             work only when label is str. Default: dict().
-        reduce_zero_label (bool): Wether ignore zero label. The parameter will
+        reduce_zero_label (bool): Whether ignore zero label. The parameter will
             work only when label is str. Default: False.
 
      Returns:
@@ -75,7 +75,7 @@ def total_intersect_and_union(
         num_classes (int): Number of categories.
         ignore_index (int): Index that will be ignored in evaluation.
         label_map (dict): Mapping old labels to new labels. Default: dict().
-        reduce_zero_label (bool): Wether ignore zero label. Default: False.
+        reduce_zero_label (bool): Whether ignore zero label. Default: False.
 
      Returns:
          ndarray: The intersection of prediction and ground truth histogram
@@ -132,7 +132,7 @@ def mean_iou(
         nan_to_num (int, optional): If specified, NaN values will be replaced
             by the numbers defined by the user. Default: None.
         label_map (dict): Mapping old labels to new labels. Default: dict().
-        reduce_zero_label (bool): Wether ignore zero label. Default: False.
+        reduce_zero_label (bool): Whether ignore zero label. Default: False.
 
      Returns:
          float: Overall accuracy on all images.
@@ -172,7 +172,7 @@ def mean_dice(
         nan_to_num (int, optional): If specified, NaN values will be replaced
             by the numbers defined by the user. Default: None.
         label_map (dict): Mapping old labels to new labels. Default: dict().
-        reduce_zero_label (bool): Wether ignore zero label. Default: False.
+        reduce_zero_label (bool): Whether ignore zero label. Default: False.
 
      Returns:
          float: Overall accuracy on all images.
@@ -213,11 +213,11 @@ def eval_metrics(
         nan_to_num (int, optional): If specified, NaN values will be replaced
             by the numbers defined by the user. Default: None.
         label_map (dict): Mapping old labels to new labels. Default: dict().
-        reduce_zero_label (bool): Wether ignore zero label. Default: False.
+        reduce_zero_label (bool): Whether ignore zero label. Default: False.
      Returns:
          float: Overall accuracy on all images.
          ndarray: Per category accuracy, shape (num_classes, ).
-         ndarray: Per category evalution metrics, shape (num_classes, ).
+         ndarray: Per category evaluation metrics, shape (num_classes, ).
     """
 
     if isinstance(metrics, str):

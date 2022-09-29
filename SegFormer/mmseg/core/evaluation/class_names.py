@@ -134,7 +134,7 @@ def ade_classes():
         "van",
         "ship",
         "fountain",
-        "conveyer belt",
+        "conveyor belt",
         "canopy",
         "washer",
         "plaything",
