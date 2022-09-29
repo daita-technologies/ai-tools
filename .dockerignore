@@ -1,6 +1,6 @@
 # Ignore everything
 **
-# Allow heathcheck module
+# Allow healthcheck module
 !healthcheck/**
 # Allow augmentation module
 !augmentation/**
@@ -10,3 +10,5 @@
 !requirements*
 # Allow all Dockerfile
 !Dockerfile*
+# Allow all python files
+!*.py
