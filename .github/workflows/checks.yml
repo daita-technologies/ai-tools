@@ -49,4 +49,4 @@ jobs:
         uses: codespell-project/actions-codespell@v1.0
         with:
           check_filenames: true
-          ignore_words_list: daita
+          ignore_words_list: daita,warmup
