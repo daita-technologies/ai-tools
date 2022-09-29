@@ -71,19 +71,21 @@ class CustomDataset(Dataset):
 
     PALETTE = None
 
-    def __init__(self,
-                 pipeline,
-                 img_dir,
-                 img_suffix='.jpg',
-                 ann_dir=None,
-                 seg_map_suffix='.png',
-                 split=None,
-                 data_root=None,
-                 test_mode=False,
-                 ignore_index=255,
-                 reduce_zero_label=False,
-                 classes=None,
-                 palette=None):
+    def __init__(
+        self,
+        pipeline,
+        img_dir,
+        img_suffix=".jpg",
+        ann_dir=None,
+        seg_map_suffix=".png",
+        split=None,
+        data_root=None,
+        test_mode=False,
+        ignore_index=255,
+        reduce_zero_label=False,
+        classes=None,
+        palette=None,
+    ):
         self.pipeline = Compose(pipeline)
         self.img_dir = img_dir
         self.img_suffix = img_suffix
@@ -95,8 +97,7 @@ class CustomDataset(Dataset):
         self.ignore_index = ignore_index
         self.reduce_zero_label = reduce_zero_label
         self.label_map = None
-        self.CLASSES, self.PALETTE = self.get_classes_and_palette(
-            classes, palette)
+        self.CLASSES, self.PALETTE = self.get_classes_and_palette(classes, palette)
 
         # join paths if data_root is specified
         if self.data_root is not None:
@@ -108,16 +109,15 @@ class CustomDataset(Dataset):
                 self.split = osp.join(self.data_root, self.split)
 
         # load annotations
-        self.img_infos = self.load_annotations(self.img_dir, self.img_suffix,
-                                               self.ann_dir,
-                                               self.seg_map_suffix, self.split)
+        self.img_infos = self.load_annotations(
+            self.img_dir, self.img_suffix, self.ann_dir, self.seg_map_suffix, self.split
+        )
 
     def __len__(self):
         """Total number of samples of data."""
         return len(self.img_infos)
 
-    def load_annotations(self, img_dir, img_suffix, ann_dir, seg_map_suffix,
-                         split):
+    def load_annotations(self, img_dir, img_suffix, ann_dir, seg_map_suffix, split):
         """Load annotation from directory.
 
         Args:
@@ -141,17 +141,17 @@ class CustomDataset(Dataset):
                     img_info = dict(filename=img_name + img_suffix)
                     if ann_dir is not None:
                         seg_map = img_name + seg_map_suffix
-                        img_info['ann'] = dict(seg_map=seg_map)
+                        img_info["ann"] = dict(seg_map=seg_map)
                     img_infos.append(img_info)
         else:
             for img in mmcv.scandir(img_dir, img_suffix, recursive=True):
                 img_info = dict(filename=img)
                 if ann_dir is not None:
                     seg_map = img.replace(img_suffix, seg_map_suffix)
-                    img_info['ann'] = dict(seg_map=seg_map)
+                    img_info["ann"] = dict(seg_map=seg_map)
                 img_infos.append(img_info)
 
-        print_log(f'Loaded {len(img_infos)} images', logger=get_root_logger())
+        print_log(f"Loaded {len(img_infos)} images", logger=get_root_logger())
         return img_infos
 
     def get_ann_info(self, idx):
@@ -164,15 +164,15 @@ class CustomDataset(Dataset):
             dict: Annotation info of specified index.
         """
 
-        return self.img_infos[idx]['ann']
+        return self.img_infos[idx]["ann"]
 
     def pre_pipeline(self, results):
         """Prepare results dict for pipeline."""
-        results['seg_fields'] = []
-        results['img_prefix'] = self.img_dir
-        results['seg_prefix'] = self.ann_dir
+        results["seg_fields"] = []
+        results["img_prefix"] = self.img_dir
+        results["seg_prefix"] = self.ann_dir
         if self.custom_classes:
-            results['label_map'] = self.label_map
+            results["label_map"] = self.label_map
 
     def __getitem__(self, idx):
         """Get training/test data after pipeline.
@@ -231,12 +231,11 @@ class CustomDataset(Dataset):
         """Get ground truth segmentation maps for evaluation."""
         gt_seg_maps = []
         for img_info in self.img_infos:
-            seg_map = osp.join(self.ann_dir, img_info['ann']['seg_map'])
+            seg_map = osp.join(self.ann_dir, img_info["ann"]["seg_map"])
             if efficient_test:
                 gt_seg_map = seg_map
             else:
-                gt_seg_map = mmcv.imread(
-                    seg_map, flag='unchanged', backend='pillow')
+                gt_seg_map = mmcv.imread(seg_map, flag="unchanged", backend="pillow")
             gt_seg_maps.append(gt_seg_map)
         return gt_seg_maps
 
@@ -264,11 +263,11 @@ class CustomDataset(Dataset):
         elif isinstance(classes, (tuple, list)):
             class_names = classes
         else:
-            raise ValueError(f'Unsupported type {type(classes)} of classes.')
+            raise ValueError(f"Unsupported type {type(classes)} of classes.")
 
         if self.CLASSES:
             if not set(classes).issubset(self.CLASSES):
-                raise ValueError('classes is not a subset of CLASSES.')
+                raise ValueError("classes is not a subset of CLASSES.")
 
             # dictionary, its keys are the old label ids and its values
             # are the new label ids.
@@ -289,8 +288,7 @@ class CustomDataset(Dataset):
         if self.label_map is not None:
             # return subset of palette
             palette = []
-            for old_id, new_id in sorted(
-                    self.label_map.items(), key=lambda x: x[1]):
+            for old_id, new_id in sorted(self.label_map.items(), key=lambda x: x[1]):
                 if new_id != -1:
                     palette.append(self.PALETTE[old_id])
             palette = type(self.PALETTE)(palette)
@@ -303,12 +301,9 @@ class CustomDataset(Dataset):
 
         return palette
 
-    def evaluate(self,
-                 results,
-                 metric='mIoU',
-                 logger=None,
-                 efficient_test=False,
-                 **kwargs):
+    def evaluate(
+        self, results, metric="mIoU", logger=None, efficient_test=False, **kwargs
+    ):
         """Evaluate the dataset.
 
         Args:
@@ -324,14 +319,13 @@ class CustomDataset(Dataset):
 
         if isinstance(metric, str):
             metric = [metric]
-        allowed_metrics = ['mIoU', 'mDice']
+        allowed_metrics = ["mIoU", "mDice"]
         if not set(metric).issubset(set(allowed_metrics)):
-            raise KeyError('metric {} is not supported'.format(metric))
+            raise KeyError("metric {} is not supported".format(metric))
         eval_results = {}
         gt_seg_maps = self.get_gt_seg_maps(efficient_test)
         if self.CLASSES is None:
-            num_classes = len(
-                reduce(np.union1d, [np.unique(_) for _ in gt_seg_maps]))
+            num_classes = len(reduce(np.union1d, [np.unique(_) for _ in gt_seg_maps]))
         else:
             num_classes = len(self.CLASSES)
         ret_metrics = eval_metrics(
@@ -341,8 +335,9 @@ class CustomDataset(Dataset):
             self.ignore_index,
             metric,
             label_map=self.label_map,
-            reduce_zero_label=self.reduce_zero_label)
-        class_table_data = [['Class'] + [m[1:] for m in metric] + ['Acc']]
+            reduce_zero_label=self.reduce_zero_label,
+        )
+        class_table_data = [["Class"] + [m[1:] for m in metric] + ["Acc"]]
         if self.CLASSES is None:
             class_names = tuple(range(num_classes))
         else:
@@ -351,29 +346,32 @@ class CustomDataset(Dataset):
             np.round(ret_metric * 100, 2) for ret_metric in ret_metrics
         ]
         for i in range(num_classes):
-            class_table_data.append([class_names[i]] +
-                                    [m[i] for m in ret_metrics_round[2:]] +
-                                    [ret_metrics_round[1][i]])
-        summary_table_data = [['Scope'] +
-                              ['m' + head
-                               for head in class_table_data[0][1:]] + ['aAcc']]
-        ret_metrics_mean = [
-            np.round(np.nanmean(ret_metric) * 100, 2)
-            for ret_metric in ret_metrics
+            class_table_data.append(
+                [class_names[i]]
+                + [m[i] for m in ret_metrics_round[2:]]
+                + [ret_metrics_round[1][i]]
+            )
+        summary_table_data = [
+            ["Scope"] + ["m" + head for head in class_table_data[0][1:]] + ["aAcc"]
         ]
-        summary_table_data.append(['global'] + ret_metrics_mean[2:] +
-                                  [ret_metrics_mean[1]] +
-                                  [ret_metrics_mean[0]])
-        print_log('per class results:', logger)
+        ret_metrics_mean = [
+            np.round(np.nanmean(ret_metric) * 100, 2) for ret_metric in ret_metrics
+        ]
+        summary_table_data.append(
+            ["global"]
+            + ret_metrics_mean[2:]
+            + [ret_metrics_mean[1]]
+            + [ret_metrics_mean[0]]
+        )
+        print_log("per class results:", logger)
         table = AsciiTable(class_table_data)
-        print_log('\n' + table.table, logger=logger)
-        print_log('Summary:', logger)
+        print_log("\n" + table.table, logger=logger)
+        print_log("Summary:", logger)
         table = AsciiTable(summary_table_data)
-        print_log('\n' + table.table, logger=logger)
+        print_log("\n" + table.table, logger=logger)
 
         for i in range(1, len(summary_table_data[0])):
-            eval_results[summary_table_data[0]
-                         [i]] = summary_table_data[1][i] / 100.0
+            eval_results[summary_table_data[0][i]] = summary_table_data[1][i] / 100.0
         if mmcv.is_list_of(results, str):
             for file_name in results:
                 os.remove(file_name)

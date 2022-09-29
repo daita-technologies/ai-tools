@@ -22,9 +22,10 @@ def get_root_logger(log_file=None, log_level=logging.INFO):
         logging.Logger: The root logger.
     """
 
-    logger = get_logger(name='mmseg', log_file=log_file, log_level=log_level)
+    logger = get_logger(name="mmseg", log_file=log_file, log_level=log_level)
 
     return logger
+
 
 def print_log(msg, logger=None, level=logging.INFO):
     """Print a log message.
@@ -40,12 +41,13 @@ def print_log(msg, logger=None, level=logging.INFO):
     """
     if logger is None:
         print(msg)
-    elif logger == 'root':
+    elif logger == "root":
         _logger = get_root_logger()
         _logger.log(level, msg)
     elif isinstance(logger, logging.Logger):
         logger.log(level, msg)
-    elif logger != 'silent':
+    elif logger != "silent":
         raise TypeError(
             'logger should be either a logging.Logger object, "root", '
-            '"silent" or None, but got {}'.format(logger))
+            '"silent" or None, but got {}'.format(logger)
+        )

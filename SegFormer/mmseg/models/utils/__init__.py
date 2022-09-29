@@ -5,6 +5,10 @@ from .self_attention_block import SelfAttentionBlock
 from .up_conv_block import UpConvBlock
 
 __all__ = [
-    'ResLayer', 'SelfAttentionBlock', 'make_divisible', 'InvertedResidual',
-    'UpConvBlock', 'InvertedResidualV3'
+    "ResLayer",
+    "SelfAttentionBlock",
+    "make_divisible",
+    "InvertedResidual",
+    "UpConvBlock",
+    "InvertedResidualV3",
 ]
