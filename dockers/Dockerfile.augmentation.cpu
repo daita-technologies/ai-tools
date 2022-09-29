@@ -12,9 +12,9 @@ COPY requirements-cpu.txt .
 RUN pip install -r requirements-cpu.txt --find-links=https://download.pytorch.org/whl/torch_stable.html --no-cache-dir
 
 # Copy necessary files to docker image
-COPY utils.py utils.py
-COPY augmentation augmentation
-COPY run_augmentation.py run_augmentation.py
+COPY utils.py .
+COPY augmentation .
+COPY run_augmentation.py .
 
 ENV PYTHONPATH="$PYTHONPATH:/app"
 ENTRYPOINT ["python", "run_augmentation.py"]
