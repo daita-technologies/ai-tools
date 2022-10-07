@@ -39,7 +39,7 @@ class PreprocessingDeployment:
 
             - "images_folder": path to folder containing input images.
 
-            - "output_folder": path to foler containing output images.
+            - "output_folder": path to folder containing output images.
 
             - "augment_code": code of augmentation, must be one of:
 
@@ -113,7 +113,7 @@ class PreprocessingDeployment:
                 for preprocess_code, image_path in data["reference_images"].items()
             }
             output_image_paths: List[str] = self.preprocessor.process(
-                input_image_paths, output_dir, preprocess_codes, reference_paths_dict
+                input_image_paths, preprocess_codes, reference_paths_dict, output_dir
             )
             return {
                 "images_paths": output_image_paths,

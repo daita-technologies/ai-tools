@@ -11,5 +11,15 @@ from .unet import UNet
 from .mix_transformer import *
 
 __all__ = [
-    'ResNet', 'ResNetV1c', 'ResNetV1d', 'ResNeXt', 'HRNet', 'FastSCNN',
-    'ResNeSt', 'MobileNetV2', 'UNet', 'CGNet', 'MobileNetV3',]
+    "ResNet",
+    "ResNetV1c",
+    "ResNetV1d",
+    "ResNeXt",
+    "HRNet",
+    "FastSCNN",
+    "ResNeSt",
+    "MobileNetV2",
+    "UNet",
+    "CGNet",
+    "MobileNetV3",
+]

@@ -19,11 +19,7 @@ class FCNHead(BaseDecodeHead):
             before classification layer.
     """
 
-    def __init__(self,
-                 num_convs=2,
-                 kernel_size=3,
-                 concat_input=True,
-                 **kwargs):
+    def __init__(self, num_convs=2, kernel_size=3, concat_input=True, **kwargs):
         assert num_convs >= 0
         self.num_convs = num_convs
         self.concat_input = concat_input
@@ -41,7 +37,9 @@ class FCNHead(BaseDecodeHead):
                 padding=kernel_size // 2,
                 conv_cfg=self.conv_cfg,
                 norm_cfg=self.norm_cfg,
-                act_cfg=self.act_cfg))
+                act_cfg=self.act_cfg,
+            )
+        )
         for i in range(num_convs - 1):
             convs.append(
                 ConvModule(
@@ -51,7 +49,9 @@ class FCNHead(BaseDecodeHead):
                     padding=kernel_size // 2,
                     conv_cfg=self.conv_cfg,
                     norm_cfg=self.norm_cfg,
-                    act_cfg=self.act_cfg))
+                    act_cfg=self.act_cfg,
+                )
+            )
         if num_convs == 0:
             self.convs = nn.Identity()
         else:
@@ -64,7 +64,8 @@ class FCNHead(BaseDecodeHead):
                 padding=kernel_size // 2,
                 conv_cfg=self.conv_cfg,
                 norm_cfg=self.norm_cfg,
-                act_cfg=self.act_cfg)
+                act_cfg=self.act_cfg,
+            )
 
     def forward(self, inputs):
         """Forward function."""

@@ -1,14 +1,12 @@
 # model settings
-norm_cfg = dict(type='SyncBN', requires_grad=True)
+norm_cfg = dict(type="SyncBN", requires_grad=True)
 find_unused_parameters = True
 model = dict(
-    type='EncoderDecoder',
+    type="EncoderDecoder",
     pretrained=None,
-    backbone=dict(
-        type='IMTRv21_5',
-        style='pytorch'),
+    backbone=dict(type="IMTRv21_5", style="pytorch"),
     decode_head=dict(
-        type='SegFormerHead',
+        type="SegFormerHead",
         in_channels=[64, 128, 320, 512],
         in_index=[0, 1, 2, 3],
         feature_strides=[4, 8, 16, 32],
@@ -18,7 +16,9 @@ model = dict(
         norm_cfg=norm_cfg,
         align_corners=False,
         decoder_params=dict(),
-        loss_decode=dict(type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
+        loss_decode=dict(type="CrossEntropyLoss", use_sigmoid=False, loss_weight=1.0),
+    ),
     # model training and testing settings
     train_cfg=dict(),
-    test_cfg=dict(mode='whole'))
+    test_cfg=dict(mode="whole"),
+)

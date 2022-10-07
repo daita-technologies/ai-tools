@@ -13,12 +13,10 @@ from typing import Dict, List, Any, Tuple
 
 
 MODEL_CONFIG: str = os.getenv(
-    "MODEL_CONFIG",
-    "local_configs/segformer/B0/segformer.b0.1024x1024.city.160k.py"
+    "MODEL_CONFIG", "local_configs/segformer/B0/segformer.b0.1024x1024.city.160k.py"
 )
 MODEL_CHECKPOINT: str = os.getenv(
-    "MODEL_CHECKPOINT",
-    "checkpoints/segformer.b0.1024x1024.city.160k.pth"
+    "MODEL_CHECKPOINT", "checkpoints/segformer.b0.1024x1024.city.160k.pth"
 )
 DEVICE: str = os.getenv("DEVICE", "cpu")
 
@@ -26,8 +24,10 @@ DEVICE: str = os.getenv("DEVICE", "cpu")
 # Setup logger
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
-formater = logging.Formatter('%(asctime)s  %(name)s  %(levelname)s: %(message)s', datefmt='%d-%b-%y %H:%M:%S')
-handler.setFormatter(formater)
+formatter = logging.Formatter(
+    "%(asctime)s  %(name)s  %(levelname)s: %(message)s", datefmt="%d-%b-%y %H:%M:%S"
+)
+handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
@@ -43,9 +43,11 @@ def visualize_result(model, image_path, result, palette=None) -> np.ndarray:
             map. If None is given, random palette will be generated.
             Default: None
     """
-    if hasattr(model, 'module'):
+    if hasattr(model, "module"):
         model = model.module
-    viz_image: np.ndarray = model.show_result(image_path, result, palette=palette, show=False)
+    viz_image: np.ndarray = model.show_result(
+        image_path, result, palette=palette, show=False
+    )
     return viz_image
 
 
@@ -54,7 +56,7 @@ def get_current_time() -> str:
 
 
 def parse_args() -> Dict[str, str]:
-    parser = argparse.ArgumentParser('Semantic segmentation with SegFormer')
+    parser = argparse.ArgumentParser("Semantic segmentation with SegFormer")
     parser.add_argument(
         "--input_json_path", type=str, required=True, help="Path to input json"
     )
@@ -111,17 +113,17 @@ if __name__ == "__main__":
         annotations: List[Dict[str, Any]] = []
         for category_id in np.unique(mask).tolist():
             binary_mask: np.ndarray = (mask == category_id).astype(np.uint8)
-            contours: List[np.ndarray] = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+            contours: List[np.ndarray] = cv2.findContours(
+                binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            )[0]
             for contour in contours:
                 # List of [x, y] coordinate
                 coordinates: List[Tuple[int, int]] = [
-                    tuple(xy)
-                    for xy in contour[:, 0, :].tolist()
+                    tuple(xy) for xy in contour[:, 0, :].tolist()
                 ]
-                annotations.append({
-                    "coordinates": coordinates,
-                    "category_id": category_id
-                })
+                annotations.append(
+                    {"coordinates": coordinates, "category_id": category_id}
+                )
 
         output: Dict[str, Any] = {
             "image_path": image_path,

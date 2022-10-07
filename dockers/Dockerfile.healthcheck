@@ -1,6 +1,6 @@
-FROM python:3.10.5-slim
+FROM python:3.8.13-slim
 
-# Install neccesary build tools
+# Install necessary build tools
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends build-essential ffmpeg libsm6 libxext6
 
@@ -12,9 +12,10 @@ COPY requirements-cpu.txt .
 RUN pip install -r requirements-cpu.txt --find-links=https://download.pytorch.org/whl/torch_stable.html --no-cache-dir
 
 # Copy necessary files to docker image
-COPY preprocessing preprocessing
-COPY healthcheck healthcheck
+COPY preprocessing .
+COPY healthcheck .
+COPY run_healthcheck.py .
 
 # Run docker
 ENV PYTHONPATH="$PYTHONPATH:/app"
-ENTRYPOINT ["python", "healthcheck/run.py"]
+ENTRYPOINT ["python", "run_healthcheck.py"]

@@ -42,9 +42,9 @@ class Preprocessor:
     def process(
         self,
         input_image_paths: List[str],
-        output_dir: str,
         preprocess_codes: List[str],
         reference_paths_dict: Dict[str, str],
+        output_dir: str,
         **kwargs,
     ) -> List[str]:
 
