@@ -5,7 +5,6 @@ from mmseg.core.evaluation.class_names import cityscapes_classes
 
 import os
 import argparse
-import uuid
 import datetime
 import json
 import logging
@@ -68,10 +67,17 @@ def parse_args() -> Dict[str, str]:
 
 if __name__ == "__main__":
     args = parse_args()
+    input_json_path: str = args["input_json_path"]
+    output_folder: str = args["output_folder"]
 
-    logger.info("Reading input json...")
-    with open(args["input_json_path"], "r") as f:
-        input_data: Dict[str, str] = json.load(f)
+    if not os.path.exists(input_json_path):
+        raise FileNotFoundError("Couldn't find input json:", input_json_path)
+    if not os.path.exists(output_folder):
+        raise NotADirectoryError("Director not exists:", output_folder)
+
+    logger.info("Reading input json at:", input_json_path)
+    with open(input_json_path, "r") as f:
+        input_data: Dict[str, List[Dict[str, Any]]] = json.load(f)
     logger.info("Input data:\n%s", pformat(input_data))
     logger.info("*" * 100)
 
@@ -82,31 +88,28 @@ if __name__ == "__main__":
     logger.info("DEVICE: %s", DEVICE)
     model = init_segmentor(MODEL_CONFIG, MODEL_CHECKPOINT, DEVICE)
     logger.info("Done initializing:\n%s", model)
+    logger.info("*" * 100)
 
     classes: List[str] = cityscapes_classes()
-    classes.insert(0, 'background')  # Add background class
+    logger.info("All possible classes: %s", classes)
+    logger.info("*" * 100)
 
-    # Map from an image id to list of corresponding annotations
-    output: Dict[int, List[Dict[str, Any]]] = {}
-    for image_info in input_data["images"]:  # NOTE: Use batch instead of loop
-        logger.info("*" * 100)
-
-        image_id: int = image_info["image_id"]
+    num_images: int = len(input_data["images"])
+    for i, image_info in enumerate(input_data["images"], start=1):  # NOTE: Use batch instead of loop
+        image_id: str = image_info["image_id"]
         image_path: str = image_info["image_path"]
 
-        logger.info("Inferencing image_path=%s | image_id=%s", image_path, image_id)
+        logger.info("[%s/%s] Inferencing image_path=%s | image_id=%s", i, num_images, image_path, image_id)
         mask: np.ndarray = inference_segmentor(model, image_path)[0]
-        class_idxs: List[int] = np.unique(mask).tolist()
+        classes_idxs: List[int] = np.unique(mask).tolist()
         logger.info(
             "%s classes are detected: %s",
-            len(class_idxs),
-            [classes[idx] for idx in class_idxs]  # idx 0 is background
+            len(classes_idxs),
+            [classes[idx] for idx in classes_idxs]
         )
 
         annotations: List[Dict[str, Any]] = []
         for category_id in np.unique(mask).tolist():
-            if category_id == 0:  # idx 0 is background
-                continue
             binary_mask: np.ndarray = (mask == category_id).astype(np.uint8)
             contours: List[np.ndarray] = cv2.findContours(binary_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
             for contour in contours:
@@ -120,25 +123,13 @@ if __name__ == "__main__":
                     "category_id": category_id
                 })
 
-        output[image_id] = {
+        output: Dict[str, Any] = {
             "image_path": image_path,
             "annotations": annotations
         }
 
-    # categories: List[Dict[str, Any]] = []
-    # for idx, class_name in enumerate(classes):
-    #     categories.append({
-    #         "supercategory": class_name,
-    #         "id": idx,
-    #         "name": class_name
-    #     })
-    # coco_output: Dict[str, Any] = deepcopy(input_data)
-    # coco_output["annotations"] = annotations
-    # coco_output["categories"] = categories
-
-    logger.info("*" * 100)
-    logger.info("Done processing %s images", len(input_data["images"]))
-    output_path: str = os.path.join(args["output_folder"], f'{get_current_time()}_{uuid.uuid4().hex}.json')
-    logger.info("Dumping output json at: %s", output_path)
-    with open(output_path, 'w') as f:
-        json.dump(output, f)
+        output_path: str = os.path.join(output_folder, f'{image_id}.json')
+        logger.info("Dumping output json at: %s", output_path)
+        with open(output_path, 'w') as f:
+            json.dump(output, f)
+        logger.info("*" * 100)
