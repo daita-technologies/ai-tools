@@ -97,17 +97,25 @@ if __name__ == "__main__":
     logger.info("*" * 100)
 
     num_images: int = len(input_data["images"])
-    for i, image_info in enumerate(input_data["images"], start=1):  # NOTE: Use batch instead of loop
+    for i, image_info in enumerate(
+        input_data["images"], start=1
+    ):  # NOTE: Use batch instead of loop
         image_id: str = image_info["image_id"]
         image_path: str = image_info["image_path"]
 
-        logger.info("[%s/%s] Inferencing image_path=%s | image_id=%s", i, num_images, image_path, image_id)
+        logger.info(
+            "[%s/%s] Inferencing image_path=%s | image_id=%s",
+            i,
+            num_images,
+            image_path,
+            image_id,
+        )
         mask: np.ndarray = inference_segmentor(model, image_path)[0]
         classes_idxs: List[int] = np.unique(mask).tolist()
         logger.info(
             "%s classes are detected: %s",
             len(classes_idxs),
-            [classes[idx] for idx in classes_idxs]
+            [classes[idx] for idx in classes_idxs],
         )
 
         annotations: List[Dict[str, Any]] = []
@@ -125,13 +133,10 @@ if __name__ == "__main__":
                     {"coordinates": coordinates, "category_id": category_id}
                 )
 
-        output: Dict[str, Any] = {
-            "image_path": image_path,
-            "annotations": annotations
-        }
+        output: Dict[str, Any] = {"image_path": image_path, "annotations": annotations}
 
-        output_path: str = os.path.join(output_folder, f'{image_id}.json')
+        output_path: str = os.path.join(output_folder, f"{image_id}.json")
         logger.info("Dumping output json at: %s", output_path)
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             json.dump(output, f)
         logger.info("*" * 100)

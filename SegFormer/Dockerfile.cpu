@@ -22,7 +22,7 @@ ENV PYTHONPATH="$PYTHONPATH:/app"
 # Copy model's checkpoint
 COPY checkpoints/segformer.b0.1024x1024.city.160k.pth checkpoints/segformer.b0.1024x1024.city.160k.pth
 
-# Install depenencies
+# Install dependencies
 COPY mmseg mmseg
 COPY setup.py setup.py
 
