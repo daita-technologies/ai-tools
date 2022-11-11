@@ -96,7 +96,7 @@ class Preprocessor:
             print(
                 f"[PREPROCESSING][pid {pid}] Reference images are not given. Finding reference image..."
             )
-            reference_paths_dict: Dict[str, str] = self.get_reference_image_paths(
+            reference_paths_dict = self.get_reference_image_paths(
                 input_image_paths, preprocess_codes.copy()
             )
         else:
@@ -209,9 +209,10 @@ class Preprocessor:
 
         # Due to some difficulty, we need to find the reference image of high resolution separately
         if preprocess_high_resolution is True:
-            batch_preprocess_name_to_values: Dict[
-                str, str
-            ] = self._find_reference_image_path(input_image_paths, ["high_resolution"])
+            batch_preprocess_name_to_values = self._find_reference_image_path(
+                input_image_paths,
+                ["high_resolution"]
+            )
             reference_image_path: str = batch_preprocess_name_to_values[
                 "high_resolution"
             ][0]
@@ -338,7 +339,6 @@ class Preprocessor:
                 preprocess_name_to_values[preprocess_name].extend(
                     [reference_image_path]
                 )
-
             else:
                 _, signal_to_noise_ls = find_reference_signal_to_noise_image(
                     input_images, input_image_paths

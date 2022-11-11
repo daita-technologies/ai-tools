@@ -14,3 +14,4 @@ awscli
 boto3
 fsspec
 s3fs
+smart-open

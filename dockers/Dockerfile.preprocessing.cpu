@@ -6,6 +6,12 @@ RUN apt-get update -y && \
 
 # Change default directory
 WORKDIR /app
+ENV PYTHONPATH="$PYTHONPATH:/app"
+
+ARG aws_access_key_id
+ARG aws_secret_access_key
+ENV AWS_ACCESS_KEY_ID $aws_access_key_id
+ENV AWS_SECRET_ACCESS_KEY $aws_secret_access_key
 
 # Install dependencies
 COPY requirements-cpu.txt .
@@ -13,8 +19,7 @@ RUN pip install -r requirements-cpu.txt --find-links=https://download.pytorch.or
 
 # Copy necessary files to docker image
 COPY utils.py .
-COPY preprocessing .
+COPY preprocessing preprocessing
 COPY run_preprocessing.py .
 
-ENV PYTHONPATH="$PYTHONPATH:/app"
 ENTRYPOINT ["python", "run_preprocessing.py"]

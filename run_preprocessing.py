@@ -1,3 +1,4 @@
+import smart_open
 import argparse
 import json
 from typing import Dict, Any, List
@@ -11,12 +12,12 @@ if __name__ == "__main__":
     )
     args: Dict[str, str] = vars(parser.parse_args())
 
-    with open(args["json_path"], "r") as f:
+    with smart_open.open(args["json_path"], "r") as f:
         data: Dict[str, Any] = json.load(f)
 
     input_image_paths: List[str] = data["images_paths"]
     preprocess_codes: List[str] = data["codes"]
-    reference_paths_dict: Dict[str, Dict[str, Any]] = data.get("reference_images", {})
+    reference_paths_dict: Dict[str, Dict[str, str]] = data.get("reference_images", {})
     output_dir: str = data["output_folder"]
 
     preprocessor = Preprocessor(use_gpu=False)
