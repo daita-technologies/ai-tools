@@ -285,7 +285,7 @@ class UNet(nn.Module):
         plugins (dict): plugins for convolutional layers. Default: None.
 
     Notice:
-        The input image size should be devisible by the whole downsample rate
+        The input image size should be divisible by the whole downsample rate
         of the encoder. More detail of the whole downsample rate can be found
         in UNet._check_input_devisible.
 
@@ -431,7 +431,7 @@ class UNet(nn.Module):
             if self.strides[i] == 2 or self.downsamples[i - 1]:
                 whole_downsample_rate *= 2
         assert (h % whole_downsample_rate == 0) and (w % whole_downsample_rate == 0), (
-            f"The input image size {(h, w)} should be devisible by the whole "
+            f"The input image size {(h, w)} should be divisible by the whole "
             f"downsample rate {whole_downsample_rate}, when num_stages is "
             f"{self.num_stages}, strides is {self.strides}, and downsamples "
             f"is {self.downsamples}."
