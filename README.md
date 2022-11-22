@@ -14,7 +14,7 @@ List of preprocessing methods:
 - `NormalizeHue`: Adjust hue of image to match with a reference image if the difference `> 75%`.
 - `NormalizeSaturation`: Adjust saturation of image to match with a reference image if the difference `> 75%`.
 - `NormalizeSharpness`: Adjust sharpness of image to match with a reference image if the difference `> 75%`.
-- `NormalizeContrast`: Adjust constrast of image to match with a reference image if the difference `> 75%`.
+- `NormalizeContrast`: Adjust contrast of image to match with a reference image if the difference `> 75%`.
 - `EqualizeHistogram`: Equalize the histogram of an image if the contrast is low.
 - `IncreaseResolution`: Increase resolution of a tensor image given a reference image.
 
@@ -36,7 +36,7 @@ List of augmentation methods:
 - `random_brightness`: Changing brightness of image randomly. Brightness factor range: `0.75` to `1.5`.
 - `random_hue`: Change hue of image randomly. Hue factor range: `-0.5` to `0.5`.
 - `random_saturation`: Change saturation of image randomly. Saturation factor range: `0.5` to `1.5`.
-- `random_contrast`: Change constrast of image randomly. Contrast factor range: `0.5` to `1.5`.
+- `random_contrast`: Change contrast of image randomly. Contrast factor range: `0.5` to `1.5`.
 - `random_solarize`: Solarize an image randomly; `thresholds = 0.1`, `additions = 0.1`.
 - `random_posterize`: Posterize an image randomly; `bits = 3`.
 - `super_resolution`: Change resolution of an image; `scale = 2`.

@@ -3,6 +3,7 @@ from ray import serve
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+import os
 import traceback
 from typing import List, Dict
 
@@ -38,7 +39,7 @@ class PreprocessingDeployment:
 
             - "images_folder": path to folder containing input images.
 
-            - "output_folder": path to foler containing output images.
+            - "output_folder": path to folder containing output images.
 
             - "augment_code": code of augmentation, must be one of:
 
@@ -100,13 +101,19 @@ class PreprocessingDeployment:
         data: Dict[str, object] = await request.json()
 
         try:
-            input_image_paths: str = data["images_paths"]
-            output_dir: str = data["output_folder"]
+            input_image_paths = [
+                os.path.join("/mnt/efs/mnt", image_path)
+                for image_path in data["images_paths"]
+            ]
+            output_dir = os.path.join("/mnt/efs/mnt", data["output_folder"])
             preprocess_codes: List[str] = data["codes"]
-            reference_paths_dict: Dict[str, str] = data["reference_images"]
 
+            reference_paths_dict: Dict[str, str] = {
+                preprocess_code: os.path.join("/mnt/efs/mnt", image_path)
+                for preprocess_code, image_path in data["reference_images"].items()
+            }
             output_image_paths: List[str] = self.preprocessor.process(
-                input_image_paths, output_dir, preprocess_codes, reference_paths_dict
+                input_image_paths, preprocess_codes, reference_paths_dict, output_dir
             )
             return {
                 "images_paths": output_image_paths,

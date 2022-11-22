@@ -3,6 +3,7 @@ from ray import serve
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+import os
 import traceback
 from typing import Any, List, Dict
 
@@ -38,7 +39,7 @@ class AugmentationDeployment:
 
             - "images_folder": path to folder containing input images.
 
-            - "output_folder": path to foler containing output images.
+            - "output_folder": path to folder containing output images.
 
             - "augment_code": code of augmentation, must be one of:
 
@@ -100,8 +101,11 @@ class AugmentationDeployment:
         data: Dict[str, object] = await request.json()
 
         try:
-            input_image_paths: str = data["images_paths"]
-            output_dir: str = data["output_folder"]
+            input_image_paths = [
+                os.path.join("/mnt/efs/mnt", image_path)
+                for image_path in data["images_paths"]
+            ]
+            output_dir = os.path.join("/mnt/efs/mnt", data["output_folder"])
             augment_codes: List[str] = data["codes"]
             num_augments_per_image: int = data.get("num_augments_per_image", 1)
             parameters: Dict[str, Dict[str, Any]] = data.get("parameters", {})
