@@ -3,7 +3,7 @@ torchvision==0.13.0+cu116
 ray[serve]==2.0.0
 fastapi==0.81.0
 imageio==2.21.2
-kornia==0.6.6
+kornia==0.6.9
 opencv-python==4.6.0.66
 Pillow==9.2.0
 scikit-image==0.19.3
