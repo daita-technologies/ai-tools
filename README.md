@@ -1,6 +1,6 @@
 # AI Tools for the DAITA Platform
 
-[![👮‍♂️ Lint](https://github.com/daita-technologies/ai-tools/actions/workflows/lint.yml/badge.svg)](https://github.com/daita-technologies/ai-tools/actions/workflows/lint.yml)
+[![👮‍♂️ Sanity checks](https://github.com/daita-technologies/ai-tools/actions/workflows/checks.yml/badge.svg)](https://github.com/daita-technologies/ai-tools/actions/workflows/checks.yml)
 
 ## Preprocessing and Augmentation
 
