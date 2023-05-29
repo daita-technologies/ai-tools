@@ -1,8 +1,8 @@
 torch==1.7.1+cpu
-torchvision==0.8.2+cpu
-mmcv-full==1.2.7
-timm==0.3.2
-pycocotools==2.0.4
+torchvision==0.15.2
+mmcv-full==1.7.1
+timm==0.9.2
+pycocotools==2.0.6
 git+https://github.com/waspinator/pycococreator.git@0.2.1
 opencv-python<5.0.0
 Cython
